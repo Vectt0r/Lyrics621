@@ -1,0 +1,7 @@
+API - https://lrclib.net/docs
+
+[GET] https://lrclib.net/api/search?q=raimundos+cintura+fina - Exibir as letras por nome da banda e musica limite de 20 resultados pela API
+
+[GET] https://lrclib.net/api/search?q=raimundos - Exbir as Letras por nome da banda limite de 20 resultados pela API
+
+[GET] https://lrclib.net/api/search?q=cintura+fina - Exibi as Letras por nome da Musica limite de 20 resultados pela API
