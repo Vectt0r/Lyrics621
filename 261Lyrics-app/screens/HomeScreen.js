@@ -31,7 +31,7 @@ export default function HomeScreen({ navigation }) {
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>LRC Lyrics Search</Text>
+            <Text style={styles.title}>261Lyrics</Text>
 
             <TextInput
                 style={styles.input}
