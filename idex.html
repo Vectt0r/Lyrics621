@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Lyrics621</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background: #333131;
+            color: #333;
+        }
+
+        h1 {
+            text-align: center;
+            color: #d8e0e7;
+        }
+
+        input[type="text"] {
+            width: 30%;
+            padding: 10px;
+            font-size: 16px;
+            margin-right: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: none;
+            background-color: #0681ef;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #34495e;
+        }
+
+        .resultado {
+            margin-top: 30px;
+        }
+
+        .musica {
+            background-color: #fff;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .musica strong {
+            font-size: 18px;
+        }
+
+        .letra {
+            display: none;
+            margin-top: 15px;
+            padding: 15px;
+            white-space: pre-line;
+            background-color: #f0f0f0;
+            border-left: 4px solid #2c3e50;
+            border-radius: 4px;
+        }
+
+        .btn-toggle {
+            margin-top: 10px;
+            background-color: #16a085;
+        }
+
+        .btn-toggle:hover {
+            background-color: #1abc9c;
+        }
+
+        .btn-download {
+            margin-top: 10px;
+            background-color: #e67e22;
+        }
+
+        .btn-download:hover {
+            background-color: #d35400;
+        }
+
+        .carregando {
+            text-align: center;
+            color: #ccc;
+            font-style: italic;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+<h1>Lyrics621</h1>
+
+<div style="text-align: center;">
+    <input type="text" id="busca" placeholder="Digite artista, música ou ambos...">
+    <button onclick="buscarLetra()">Buscar</button>
+</div>
+
+<div id="resultado" class="resultado"></div>
+
+<script>
+    async function buscarLetra() {
+        const termo = document.getElementById('busca').value.trim();
+        const resultado = document.getElementById('resultado');
+        resultado.innerHTML = '';
+
+        if (!termo) {
+            resultado.innerHTML = '<p>Digite um termo para buscar.</p>';
+            return;
+        }
+
+        resultado.innerHTML = '<p class="carregando">Carregando...</p>';
+
+        try {
+            const response = await fetch(`https://lrclib.net/api/search?q=${encodeURIComponent(termo)}`);
+            const data = await response.json();
+            resultado.innerHTML = '';
+
+            if (!Array.isArray(data) || data.length === 0) {
+                resultado.innerHTML = '<p>Nenhum resultado encontrado.</p>';
+                return;
+            }
+
+            data.forEach((item, index) => {
+                const container = document.createElement('div');
+                container.className = 'musica';
+
+                container.innerHTML = `
+                    <strong>${item.artistName} - ${item.trackName}</strong><br>
+                    <button class="btn-toggle" onclick="toggleLetra(${index})">Mostrar Letra</button>
+                    <button class="btn-download" onclick="baixarLetra(${index}, '${sanitize(item.artistName)}', '${sanitize(item.trackName)}')">📥 Baixar Letra</button>
+                    <div id="letra-${index}" class="letra">${item.plainLyrics || 'Letra não disponível.'}</div>
+                `;
+
+                resultado.appendChild(container);
+            });
+        } catch (e) {
+            resultado.innerHTML = '<p>Erro ao buscar os dados da API.</p>';
+            console.error(e);
+        }
+    }
+
+    function toggleLetra(index) {
+        const letraDiv = document.getElementById(`letra-${index}`);
+        const button = letraDiv.previousElementSibling.previousElementSibling;
+        if (letraDiv.style.display === 'none' || letraDiv.style.display === '') {
+            letraDiv.style.display = 'block';
+            button.textContent = 'Ocultar Letra';
+        } else {
+            letraDiv.style.display = 'none';
+            button.textContent = 'Mostrar Letra';
+        }
+    }
+
+    function baixarLetra(index, artista, musica) {
+        const letra = document.getElementById(`letra-${index}`).textContent;
+        const blob = new Blob([letra], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+
+        a.href = url;
+        a.download = `${artista} - ${musica}.txt`;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    function sanitize(text) {
+        return text.replace(/[^a-zA-Z0-9\s\-]/g, '').replace(/\s+/g, ' ').trim();
+    }
+</script>
+</body>
+</html>
