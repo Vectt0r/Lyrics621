@@ -1,6 +1,5 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator, TransitionPresets } from '@react-navigation/stack';
 import HomeScreen from './screens/HomeScreen';
@@ -10,11 +9,10 @@ import MusicasScreen from './screens/MusicasScreen';
 import { MaterialIcons } from '@expo/vector-icons';
 import { FontSizeProvider } from './screens/FontSizeContext';
 
-
-
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
+// Stack da aba Home
 function HomeStack() {
     return (
         <Stack.Navigator
@@ -31,10 +29,26 @@ function HomeStack() {
     );
 }
 
+// Stack da aba Musicas
+function MusicasStack() {
+    return (
+        <Stack.Navigator
+            screenOptions={{
+                ...TransitionPresets.SlideFromRightIOS,
+                gestureDirection: 'horizontal',
+                gestureEnabled: true,
+                headerShown: false,
+            }}
+        >
+            <Stack.Screen name="Musicas" component={MusicasScreen} />
+            <Stack.Screen name="Letra" component={LyricsScreen} />
+        </Stack.Navigator>
+    );
+}
+
 export default function App() {
     return (
         <FontSizeProvider>
-
             <NavigationContainer>
                 <Tab.Navigator
                     screenOptions={{
@@ -65,7 +79,7 @@ export default function App() {
                     />
                     <Tab.Screen
                         name="Musicas"
-                        component={MusicasScreen}
+                        component={MusicasStack}
                         options={{
                             headerShown: false,
                             tabBarIcon: ({ color, size }) => (
@@ -73,10 +87,8 @@ export default function App() {
                             ),
                         }}
                     />
-
                 </Tab.Navigator>
             </NavigationContainer>
         </FontSizeProvider>
-
     );
 }

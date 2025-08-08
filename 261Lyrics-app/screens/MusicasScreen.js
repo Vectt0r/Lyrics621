@@ -1,10 +1,61 @@
-import React from 'react';
-import { View, Text } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import * as FileSystem from 'expo-file-system';
+import { useNavigation } from '@react-navigation/native';
 
 export default function MusicasScreen() {
+    const [arquivos, setArquivos] = useState([]);
+    const navigation = useNavigation();
+
+    useEffect(() => {
+        const carregarArquivos = async () => {
+            try {
+                const lista = await FileSystem.readDirectoryAsync(FileSystem.documentDirectory);
+                const arquivosTxt = lista.filter(nome => nome.endsWith('.txt'));
+                setArquivos(arquivosTxt);
+            } catch (err) {
+                console.error('Erro ao listar arquivos:', err);
+            }
+        };
+        carregarArquivos();
+    }, []);
+
+    const abrirLetra = (nomeArquivo) => {
+        navigation.navigate('Letra', { nomeArquivo });
+    };
+
     return (
-        <View style={{ flex: 1, backgroundColor: '#121212', justifyContent: 'center', alignItems: 'center' }}>
-            <Text style={{ color: '#fff' }}>Tela de Músicas Salvas (em construção)</Text>
+        <View style={styles.container}>
+            <Text style={styles.titulo}>Músicas Salvas</Text>
+            <ScrollView>
+                {arquivos.map((nome, index) => (
+                    <TouchableOpacity key={index} onPress={() => abrirLetra(nome)} style={styles.item}>
+                        <Text style={styles.nomeMusica}>{nome.replace('.txt', '')}</Text>
+                    </TouchableOpacity>
+                ))}
+            </ScrollView>
         </View>
     );
 }
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: '#121212',
+        padding: 20
+    },
+    titulo: {
+        fontSize: 20,
+        color: '#fff',
+        marginBottom: 10
+    },
+    item: {
+        paddingVertical: 10,
+        borderBottomColor: '#444',
+        borderBottomWidth: 1
+    },
+    nomeMusica: {
+        color: '#00e676',
+        fontSize: 16
+    }
+});
