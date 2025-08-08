@@ -1,21 +1,25 @@
-import React, { useRef, useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, Dimensions } from 'react-native';
+import React, { useRef, useState, useEffect, useContext } from 'react';
+import {
+    View, Text, StyleSheet, ScrollView,
+    TouchableOpacity, SafeAreaView
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { FontSizeContext } from './FontSizeContext';
 
 export default function LyricsScreen({ route }) {
     const { letra } = route.params;
-    const [fontSize, setFontSize] = useState(16);
+    const { fontSize, setFontSize } = useContext(FontSizeContext);
     const [scrolling, setScrolling] = useState(false);
-    const [speed, setSpeed] = useState(1); // 1 = normal
+    const [speed, setSpeed] = useState(1);
     const scrollRef = useRef(null);
     const scrollPosition = useRef(0);
     const intervalRef = useRef(null);
 
-    // Funções de fonte
+    // Ajusta o tamanho da fonte globalmente
     const increaseFont = () => setFontSize(prev => Math.min(prev + 2, 40));
     const decreaseFont = () => setFontSize(prev => Math.max(prev - 2, 12));
 
-    // Auto scroll handler
+    // Auto scroll
     useEffect(() => {
         if (scrolling) {
             intervalRef.current = setInterval(() => {
@@ -24,8 +28,7 @@ export default function LyricsScreen({ route }) {
                     y: scrollPosition.current,
                     animated: false,
                 });
-            }, 50); // frequência de scroll
-
+            }, 50);
         } else {
             clearInterval(intervalRef.current);
         }
@@ -49,7 +52,7 @@ export default function LyricsScreen({ route }) {
                 </Text>
             </ScrollView>
 
-            {/* Controles de fonte e rolagem */}
+            {/* Controles */}
             <View style={styles.fixedControls}>
                 <View style={styles.row}>
                     <TouchableOpacity
@@ -80,9 +83,23 @@ export default function LyricsScreen({ route }) {
                     >
                         <Ionicons name="arrow-up" size={28} color="#00e676" />
                     </TouchableOpacity>
+
+                    {/* Botões para controlar a fonte global */}
+                    <TouchableOpacity
+                        style={{ marginHorizontal: 10 }}
+                        onPress={decreaseFont}
+                    >
+                        <Ionicons name="remove-circle-outline" size={28} color="#00e676" />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={{ marginHorizontal: 10 }}
+                        onPress={increaseFont}
+                    >
+                        <Ionicons name="add-circle-outline" size={28} color="#00e676" />
+                    </TouchableOpacity>
                 </View>
             </View>
-
         </SafeAreaView>
     );
 }
@@ -94,7 +111,7 @@ const styles = StyleSheet.create({
     },
     content: {
         padding: 20,
-        paddingBottom: 100, // deixa espaço para os botões
+        paddingBottom: 100,
     },
     title: {
         color: '#00e676',
@@ -109,7 +126,7 @@ const styles = StyleSheet.create({
     },
     fixedControls: {
         position: 'absolute',
-        bottom: 0, // ajuste para ficar logo acima da BottomTab
+        bottom: 0,
         left: 0,
         right: 0,
         flexDirection: 'row',

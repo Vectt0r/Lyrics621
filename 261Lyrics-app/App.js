@@ -8,6 +8,8 @@ import LyricsScreen from './screens/LyricsScreen';
 import SetListsScreen from './screens/SetListsScreen';
 import MusicasScreen from './screens/MusicasScreen';
 import { MaterialIcons } from '@expo/vector-icons';
+import { FontSizeProvider } from './screens/FontSizeContext';
+
 
 
 const Stack = createStackNavigator();
@@ -31,46 +33,50 @@ function HomeStack() {
 
 export default function App() {
     return (
-        <NavigationContainer>
-            <Tab.Navigator
-                screenOptions={{
-                    tabBarActiveTintColor: '#00e676',
-                    tabBarInactiveTintColor: '#aaa',
-                    tabBarStyle: { backgroundColor: '#121212' },
-                }}
-            >
-                <Tab.Screen
-                    name="Home"
-                    component={HomeStack}
-                    options={{
-                        headerShown: false,
-                        tabBarIcon: ({ color, size }) => (
-                            <MaterialIcons name="home" color={color} size={size} />
-                        ),
-                    }}
-                />
-                <Tab.Screen
-                    name="SetLists"
-                    component={SetListsScreen}
-                    options={{
-                        headerShown: false,
-                        tabBarIcon: ({ color, size }) => (
-                            <MaterialIcons name="playlist-play" color={color} size={size} />
-                        ),
-                    }}
-                />
-                <Tab.Screen
-                    name="Musicas"
-                    component={MusicasScreen}
-                    options={{
-                        headerShown: false,
-                        tabBarIcon: ({ color, size }) => (
-                            <MaterialIcons name="music-note" color={color} size={size} />
-                        ),
-                    }}
-                />
+        <FontSizeProvider>
 
-            </Tab.Navigator>
-        </NavigationContainer>
+            <NavigationContainer>
+                <Tab.Navigator
+                    screenOptions={{
+                        tabBarActiveTintColor: '#00e676',
+                        tabBarInactiveTintColor: '#aaa',
+                        tabBarStyle: { backgroundColor: '#121212' },
+                    }}
+                >
+                    <Tab.Screen
+                        name="Home"
+                        component={HomeStack}
+                        options={{
+                            headerShown: false,
+                            tabBarIcon: ({ color, size }) => (
+                                <MaterialIcons name="home" color={color} size={size} />
+                            ),
+                        }}
+                    />
+                    <Tab.Screen
+                        name="SetLists"
+                        component={SetListsScreen}
+                        options={{
+                            headerShown: false,
+                            tabBarIcon: ({ color, size }) => (
+                                <MaterialIcons name="playlist-play" color={color} size={size} />
+                            ),
+                        }}
+                    />
+                    <Tab.Screen
+                        name="Musicas"
+                        component={MusicasScreen}
+                        options={{
+                            headerShown: false,
+                            tabBarIcon: ({ color, size }) => (
+                                <MaterialIcons name="music-note" color={color} size={size} />
+                            ),
+                        }}
+                    />
+
+                </Tab.Navigator>
+            </NavigationContainer>
+        </FontSizeProvider>
+
     );
 }
