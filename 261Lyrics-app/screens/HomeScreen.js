@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, Alert , Image } from 'react-native';
 import axios from 'axios';
 import * as FileSystem from 'expo-file-system';
+const logo = require('../images/logo.png'); // Caminho real da imagem no seu projeto
 
 export default function HomeScreen({ navigation }) {
     const [query, setQuery] = useState('');
@@ -31,8 +32,10 @@ export default function HomeScreen({ navigation }) {
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>261Lyrics</Text>
-
+            <View style={styles.titleRow}>
+                <Image source={logo} style={styles.logo} />
+                <Text style={styles.titleText}>Lyrics</Text>
+            </View>
             <TextInput
                 style={styles.input}
                 placeholder="Digite artista, música ou ambos"
@@ -76,16 +79,28 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#121212',
-        paddingTop: 50,
+        paddingTop: 110,
         paddingHorizontal: 15,
     },
-    title: {
-        color: '#fff',
-        fontSize: 24,
-        fontWeight: 'bold',
-        marginBottom: 20,
-        alignSelf: 'center',
+    titleRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 40,
     },
+
+    logo: {
+        width: 70,
+        height: 50,
+        marginRight: 10,
+    },
+
+    titleText: {
+        color: '#fff',
+        fontSize: 32,
+        fontWeight: 'bold',
+    },
+
     input: {
         backgroundColor: '#1e1e1e',
         color: '#fff',
