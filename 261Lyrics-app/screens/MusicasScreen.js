@@ -1,24 +1,31 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import * as FileSystem from 'expo-file-system';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 
 export default function MusicasScreen() {
     const [arquivos, setArquivos] = useState([]);
     const navigation = useNavigation();
 
-    useEffect(() => {
-        const carregarArquivos = async () => {
-            try {
-                const lista = await FileSystem.readDirectoryAsync(FileSystem.documentDirectory);
-                const arquivosTxt = lista.filter(nome => nome.endsWith('.txt'));
-                setArquivos(arquivosTxt);
-            } catch (err) {
-                console.error('Erro ao listar arquivos:', err);
-            }
-        };
-        carregarArquivos();
-    }, []);
+    const carregarArquivos = async () => {
+        try {
+            const lista = await FileSystem.readDirectoryAsync(FileSystem.documentDirectory);
+            const arquivosTxt = lista.filter(nome => nome.endsWith('.txt'));
+
+            console.log("📂 Pasta do app:", FileSystem.documentDirectory);
+            console.log("📄 Arquivos encontrados:", arquivosTxt);
+
+            setArquivos(arquivosTxt);
+        } catch (err) {
+            console.error('Erro ao listar arquivos:', err);
+        }
+    };
+
+    useFocusEffect(
+        useCallback(() => {
+            carregarArquivos();
+        }, [])
+    );
 
     const abrirLetra = (nomeArquivo) => {
         navigation.navigate('Letra', { nomeArquivo });
