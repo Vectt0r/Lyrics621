@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#121212',
-        paddingTop: 110,
+        paddingTop: 90,
         paddingHorizontal: 15,
     },
     titleRow: {
@@ -106,14 +106,14 @@ const styles = StyleSheet.create({
         color: '#fff',
         padding: 10,
         borderRadius: 5,
-        marginBottom: 10,
+        marginBottom: 25,
     },
     button: {
-        backgroundColor: '#00bfa5',
+        backgroundColor: '#00e676',
         padding: 10,
         borderRadius: 5,
         alignItems: 'center',
-        marginBottom: 20,
+        marginBottom: 25,
     },
     buttonText: {
         color: '#121212',
@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
     },
     visualizarBtn: {
-        backgroundColor: '#0288d1',
+        backgroundColor: '#f8f9fa',
         padding: 8,
         borderRadius: 5,
         flex: 1,
@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     baixarBtn: {
-        backgroundColor: '#43a047',
+        backgroundColor: '#00e676',
         padding: 8,
         borderRadius: 5,
         flex: 1,
@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     actionText: {
-        color: '#fff',
+        color: '#070707',
         fontWeight: 'bold',
     },
 });
