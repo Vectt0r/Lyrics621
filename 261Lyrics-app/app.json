@@ -3,7 +3,7 @@
     "name": "261Lyrics-app",
     "slug": "261Lyrics-app",
     "version": "1.0.0",
-    "orientation": "default",
+    "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,

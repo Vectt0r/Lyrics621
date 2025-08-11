@@ -21,6 +21,7 @@ function HomeStack() {
                 gestureDirection: 'horizontal',
                 gestureEnabled: true,
                 headerShown: false,
+                footerShow: false,
             }}
         >
             <Stack.Screen name="Home" component={HomeScreen} />
