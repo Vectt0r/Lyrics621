@@ -1,7 +1,8 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native';
 import * as FileSystem from 'expo-file-system';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { MaterialIcons } from '@expo/vector-icons';
 
 export default function MusicasScreen() {
     const [arquivos, setArquivos] = useState([]);
@@ -11,9 +12,6 @@ export default function MusicasScreen() {
         try {
             const lista = await FileSystem.readDirectoryAsync(FileSystem.documentDirectory);
             const arquivosTxt = lista.filter(nome => nome.endsWith('.txt'));
-
-            console.log("📂 Pasta do app:", FileSystem.documentDirectory);
-            console.log("📄 Arquivos encontrados:", arquivosTxt);
 
             setArquivos(arquivosTxt);
         } catch (err) {
@@ -31,14 +29,41 @@ export default function MusicasScreen() {
         navigation.navigate('Letra', { nomeArquivo });
     };
 
+    const confirmarExcluir = (nomeArquivo) => {
+        Alert.alert(
+            'Excluir música',
+            `Deseja excluir a música "${nomeArquivo.replace('.txt', '')}"?`,
+            [
+                { text: 'Cancelar', style: 'cancel' },
+                { text: 'Excluir', style: 'destructive', onPress: () => excluirArquivo(nomeArquivo) }
+            ],
+            { cancelable: true }
+        );
+    };
+
+    const excluirArquivo = async (nomeArquivo) => {
+        try {
+            const caminho = FileSystem.documentDirectory + nomeArquivo;
+            await FileSystem.deleteAsync(caminho);
+            carregarArquivos();
+        } catch (err) {
+            console.error('Erro ao excluir arquivo:', err);
+        }
+    };
+
     return (
         <View style={styles.container}>
             <Text style={styles.titulo}>Músicas Salvas</Text>
             <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
                 {arquivos.map((nome, index) => (
-                    <TouchableOpacity key={index} onPress={() => abrirLetra(nome)} style={styles.item}>
-                        <Text style={styles.nomeMusica}>{nome.replace('.txt', '')}</Text>
-                    </TouchableOpacity>
+                    <View key={index} style={styles.itemRow}>
+                        <TouchableOpacity style={styles.item} onPress={() => abrirLetra(nome)}>
+                            <Text style={styles.nomeMusica}>{nome.replace('.txt', '')}</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => confirmarExcluir(nome)} style={styles.deleteButton}>
+                            <MaterialIcons name="delete" size={28} color="#dc3545" />
+                        </TouchableOpacity>
+                    </View>
                 ))}
             </ScrollView>
         </View>
@@ -58,13 +83,21 @@ const styles = StyleSheet.create({
         marginBottom: 20,
         fontWeight: 'bold',
     },
-    item: {
-        paddingVertical: 10,
+    itemRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
         borderBottomColor: '#444',
         borderBottomWidth: 1,
+        paddingVertical: 10,
+    },
+    item: {
+        flex: 1,
     },
     nomeMusica: {
         color: '#00e676',
-        fontSize: 16,
+        fontSize: 20,
+    },
+    deleteButton: {
+        paddingHorizontal: 10,
     },
 });
