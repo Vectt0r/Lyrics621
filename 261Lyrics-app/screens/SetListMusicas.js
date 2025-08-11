@@ -4,44 +4,100 @@ import {
     Text,
     TouchableOpacity,
     Modal,
-    TextInput,
-    StyleSheet,
     ScrollView,
+    StyleSheet,
     Alert,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as FileSystem from 'expo-file-system';
 
 export default function SetListMusicas({ route, navigation }) {
     const { setList } = route.params;
 
     const [modalVisible, setModalVisible] = useState(false);
-    const [musicaNome, setMusicaNome] = useState('');
     const [musicas, setMusicas] = useState(setList.musicas || []);
+    const [musicasSalvas, setMusicasSalvas] = useState([]);
+    const [selecionadas, setSelecionadas] = useState([]);
+    const [todosSetLists, setTodosSetLists] = useState([]);
 
-    // Salvar músicas no AsyncStorage e atualizar setList
-    const saveMusicas = async (novasMusicas) => {
+    // Carrega todos os setlists do AsyncStorage
+    const carregarSetLists = async () => {
         try {
             const jsonValue = await AsyncStorage.getItem('@setlists');
-            let allSetLists = jsonValue ? JSON.parse(jsonValue) : [];
+            const dados = jsonValue != null ? JSON.parse(jsonValue) : [];
+            setTodosSetLists(dados);
 
-            // Atualizar o setList atual com novas músicas
-            allSetLists = allSetLists.map((item) =>
-                item.id === setList.id ? { ...item, musicas: novasMusicas } : item
-            );
-
-            await AsyncStorage.setItem('@setlists', JSON.stringify(allSetLists));
+            // Atualiza o setList atual, caso esteja salvo
+            const atual = dados.find(s => s.id === setList.id);
+            if (atual) setMusicas(atual.musicas || []);
         } catch (e) {
-            console.error('Erro ao salvar músicas', e);
+            console.error('Erro ao carregar setlists', e);
         }
     };
 
-    const handleSave = () => {
-        if (!musicaNome.trim()) return;
+    useEffect(() => {
+        carregarSetLists();
+    }, []);
 
-        const novasMusicas = [...musicas, { name: musicaNome }];
+    // Carrega arquivos .txt da pasta do app
+    const carregarMusicasSalvas = async () => {
+        try {
+            const lista = await FileSystem.readDirectoryAsync(FileSystem.documentDirectory);
+            const arquivosTxt = lista.filter(nome => nome.endsWith('.txt'));
+            const nomesSemExt = arquivosTxt.map(nome => nome.replace('.txt', ''));
+            setMusicasSalvas(nomesSemExt);
+            setSelecionadas([]);
+        } catch (e) {
+            console.error('Erro ao listar arquivos:', e);
+        }
+    };
+
+    // Salvar todos os setlists no AsyncStorage
+    const salvarSetLists = async (novosSetLists) => {
+        try {
+            await AsyncStorage.setItem('@setlists', JSON.stringify(novosSetLists));
+            setTodosSetLists(novosSetLists);
+        } catch (e) {
+            console.error('Erro ao salvar setlists', e);
+        }
+    };
+
+    // Atualiza o setList atual e salva
+    const atualizarSetList = (novasMusicas) => {
+        const novosSetLists = todosSetLists.map(s =>
+            s.id === setList.id ? { ...s, musicas: novasMusicas } : s
+        );
         setMusicas(novasMusicas);
-        saveMusicas(novasMusicas);
-        setMusicaNome('');
+        salvarSetLists(novosSetLists);
+    };
+
+    const abrirModal = () => {
+        carregarMusicasSalvas();
+        setModalVisible(true);
+    };
+
+    const toggleSelecionada = (nome) => {
+        if (selecionadas.includes(nome)) {
+            setSelecionadas(selecionadas.filter(m => m !== nome));
+        } else {
+            setSelecionadas([...selecionadas, nome]);
+        }
+    };
+
+    const handleSalvarSelecionadas = () => {
+        if (selecionadas.length === 0) {
+            Alert.alert('Nenhuma música selecionada');
+            return;
+        }
+
+        const novasMusicas = [
+            ...musicas,
+            ...selecionadas
+                .filter(m => !musicas.some(musica => musica.name === m))
+                .map(m => ({ name: m })),
+        ];
+
+        atualizarSetList(novasMusicas);
         setModalVisible(false);
     };
 
@@ -56,8 +112,7 @@ export default function SetListMusicas({ route, navigation }) {
                     style: 'destructive',
                     onPress: () => {
                         const novasMusicas = musicas.filter((_, i) => i !== index);
-                        setMusicas(novasMusicas);
-                        saveMusicas(novasMusicas);
+                        atualizarSetList(novasMusicas);
                     },
                 },
             ],
@@ -73,7 +128,6 @@ export default function SetListMusicas({ route, navigation }) {
                 {musicas.map((item, index) => (
                     <View key={index} style={styles.resultItem}>
                         <Text style={styles.songTitle}>{item.name}</Text>
-
                         <TouchableOpacity
                             style={styles.deleteBtn}
                             onPress={() => handleDeleteMusica(index)}
@@ -84,7 +138,7 @@ export default function SetListMusicas({ route, navigation }) {
                 ))}
             </ScrollView>
 
-            <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
+            <TouchableOpacity style={styles.addButton} onPress={abrirModal}>
                 <Text style={styles.addButtonText}>Adicionar Música</Text>
             </TouchableOpacity>
 
@@ -96,14 +150,33 @@ export default function SetListMusicas({ route, navigation }) {
             >
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalContent}>
-                        <Text style={styles.modalTitle}>Nova Música</Text>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Digite o nome da música"
-                            placeholderTextColor="#aaa"
-                            value={musicaNome}
-                            onChangeText={setMusicaNome}
-                        />
+                        <Text style={styles.modalTitle}>Selecione as Músicas</Text>
+                        <ScrollView style={{ maxHeight: 300 }}>
+                            {musicasSalvas.length === 0 ? (
+                                <Text style={{ color: '#fff', textAlign: 'center', marginTop: 20 }}>
+                                    Nenhuma música salva encontrada.
+                                </Text>
+                            ) : (
+                                musicasSalvas.map((nome, i) => {
+                                    const isChecked = selecionadas.includes(nome);
+                                    return (
+                                        <TouchableOpacity
+                                            key={i}
+                                            onPress={() => toggleSelecionada(nome)}
+                                            style={styles.checkboxContainer}
+                                        >
+                                            <View
+                                                style={[
+                                                    styles.checkbox,
+                                                    { backgroundColor: isChecked ? '#1DB954' : '#333' },
+                                                ]}
+                                            />
+                                            <Text style={styles.checkboxLabel}>{nome}</Text>
+                                        </TouchableOpacity>
+                                    );
+                                })
+                            )}
+                        </ScrollView>
                         <View style={styles.modalButtons}>
                             <TouchableOpacity
                                 style={styles.cancelButton}
@@ -111,7 +184,10 @@ export default function SetListMusicas({ route, navigation }) {
                             >
                                 <Text style={styles.buttonText}>Cancelar</Text>
                             </TouchableOpacity>
-                            <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+                            <TouchableOpacity
+                                style={styles.saveButton}
+                                onPress={handleSalvarSelecionadas}
+                            >
                                 <Text style={styles.buttonText}>Salvar</Text>
                             </TouchableOpacity>
                         </View>
@@ -123,20 +199,8 @@ export default function SetListMusicas({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
-    // Estilos iguais ao que você já usou, só adicionar deleteBtn:
-
-    container: {
-        flex: 1,
-        backgroundColor: '#121212',
-        padding: 20,
-    },
-    titulo: {
-        fontSize: 25,
-        color: '#fff',
-        marginTop: 60,
-        marginBottom: 5,
-        fontWeight: 'bold',
-    },
+    container: { flex: 1, backgroundColor: '#121212', padding: 20 },
+    titulo: { fontSize: 25, color: '#fff', marginTop: 60, marginBottom: 5, fontWeight: 'bold' },
     resultItem: {
         backgroundColor: '#1e1e1e',
         padding: 12,
@@ -146,20 +210,14 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
     },
-    songTitle: {
-        color: '#fff',
-        fontSize: 16,
-    },
+    songTitle: { color: '#fff', fontSize: 16 },
     deleteBtn: {
         backgroundColor: '#dc3545',
         paddingVertical: 6,
         paddingHorizontal: 12,
         borderRadius: 6,
     },
-    actionText: {
-        color: '#fff',
-        fontWeight: 'bold',
-    },
+    actionText: { color: '#fff', fontWeight: 'bold' },
     addButton: {
         backgroundColor: '#1DB954',
         padding: 15,
@@ -171,11 +229,7 @@ const styles = StyleSheet.create({
         right: 20,
         elevation: 5,
     },
-    addButtonText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
+    addButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
     modalOverlay: {
         flex: 1,
         backgroundColor: 'rgba(0,0,0,0.6)',
@@ -186,26 +240,20 @@ const styles = StyleSheet.create({
         backgroundColor: '#222',
         padding: 20,
         borderRadius: 10,
-        width: '80%',
+        width: '90%',
     },
-    modalTitle: {
-        color: '#fff',
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginBottom: 15,
+    modalTitle: { color: '#fff', fontSize: 18, fontWeight: 'bold', marginBottom: 15, textAlign: 'center' },
+    checkboxContainer: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8 },
+    checkbox: {
+        width: 20,
+        height: 20,
+        borderRadius: 4,
+        marginRight: 12,
+        borderWidth: 1,
+        borderColor: '#1DB954',
     },
-    input: {
-        backgroundColor: '#333',
-        color: '#fff',
-        borderRadius: 6,
-        paddingHorizontal: 10,
-        paddingVertical: 8,
-        marginBottom: 20,
-    },
-    modalButtons: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-    },
+    checkboxLabel: { color: '#fff', fontSize: 16 },
+    modalButtons: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 15 },
     cancelButton: {
         backgroundColor: '#555',
         padding: 10,
@@ -213,15 +261,6 @@ const styles = StyleSheet.create({
         flex: 1,
         marginRight: 10,
     },
-    saveButton: {
-        backgroundColor: '#1DB954',
-        padding: 10,
-        borderRadius: 6,
-        flex: 1,
-    },
-    buttonText: {
-        color: '#fff',
-        fontWeight: 'bold',
-        textAlign: 'center',
-    },
+    saveButton: { backgroundColor: '#1DB954', padding: 10, borderRadius: 6, flex: 1 },
+    buttonText: { color: '#fff', fontWeight: 'bold', textAlign: 'center' },
 });
