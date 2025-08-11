@@ -148,8 +148,9 @@ export default function SetListLyricsScreen({ route, navigation }) {
                     }}
                     scrollEventThrottle={16}
                 >
-                    {/* Letra com zoom */}
-                    <Text style={[styles.lyrics, { fontSize }]}>{letra}</Text>
+                    <Text style={[styles.lyrics, { fontSize, lineHeight: fontSize * 1.5 }]}>
+                        {letra}
+                    </Text>
                 </ScrollView>
             )}
 
