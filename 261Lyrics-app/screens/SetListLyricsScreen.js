@@ -9,6 +9,7 @@ import {
     ActivityIndicator,
     TouchableOpacity,
     SafeAreaView,
+    Animated,
 } from 'react-native';
 import * as FileSystem from 'expo-file-system';
 import { useFocusEffect } from '@react-navigation/native';
@@ -23,37 +24,49 @@ export default function SetListLyricsScreen({ route, navigation }) {
     const [loading, setLoading] = useState(false);
     const scrollRef = useRef(null);
 
-    // Fonte zoom só letra
     const [fontSize, setFontSize] = useState(16);
-
-    // Auto scroll
     const [scrolling, setScrolling] = useState(false);
     const [speed, setSpeed] = useState(1);
     const scrollPosition = useRef(0);
     const intervalRef = useRef(null);
-
-    // Fullscreen
     const [isFullscreen, setIsFullscreen] = useState(false);
 
-    const carregarLetra = async (nomeMusica) => {
+    // Animated opacity para fade
+    const fadeAnim = useRef(new Animated.Value(1)).current;
+
+    // Carregar letra com fade
+    const carregarLetraComFade = async (nomeMusica) => {
         setLoading(true);
-        try {
-            const caminho = FileSystem.documentDirectory + nomeMusica + '.txt';
-            const texto = await FileSystem.readAsStringAsync(caminho);
-            setLetra(texto);
-            scrollRef.current?.scrollTo({ y: 0, animated: false });
-            scrollPosition.current = 0;
-        } catch (error) {
-            setLetra('Erro ao carregar a letra.');
-            console.error(error);
-        } finally {
-            setLoading(false);
-        }
+        // Fade out
+        Animated.timing(fadeAnim, {
+            toValue: 0,
+            duration: 200,
+            useNativeDriver: true,
+        }).start(async () => {
+            try {
+                const caminho = FileSystem.documentDirectory + nomeMusica + '.txt';
+                const texto = await FileSystem.readAsStringAsync(caminho);
+                setLetra(texto);
+                scrollRef.current?.scrollTo({ y: 0, animated: false });
+                scrollPosition.current = 0;
+            } catch (error) {
+                setLetra('Erro ao carregar a letra.');
+                console.error(error);
+            } finally {
+                setLoading(false);
+                // Fade in
+                Animated.timing(fadeAnim, {
+                    toValue: 1,
+                    duration: 200,
+                    useNativeDriver: true,
+                }).start();
+            }
+        });
     };
 
     useEffect(() => {
         if (indice >= 0 && indice < musicas.length) {
-            carregarLetra(musicas[indice].name);
+            carregarLetraComFade(musicas[indice].name);
         }
     }, [indice]);
 
@@ -135,14 +148,16 @@ export default function SetListLyricsScreen({ route, navigation }) {
     return (
         <SafeAreaView style={styles.container} {...panResponder.panHandlers}>
             {/* Título fixo sem zoom */}
-            <Text style={styles.title}>{musicas[indice]?.name || 'Sem música'}</Text>
+            <Text style={[styles.title, isFullscreen && styles.titleFullscreen]}>
+                {musicas[indice]?.name || 'Sem música'}
+            </Text>
 
             {loading ? (
                 <ActivityIndicator size="large" color="#1DB954" style={{ marginTop: 20 }} />
             ) : (
-                <ScrollView
+                <Animated.ScrollView
                     ref={scrollRef}
-                    style={styles.scroll}
+                    style={[styles.scroll, { opacity: fadeAnim }]}
                     onScroll={(e) => {
                         scrollPosition.current = e.nativeEvent.contentOffset.y;
                     }}
@@ -151,7 +166,7 @@ export default function SetListLyricsScreen({ route, navigation }) {
                     <Text style={[styles.lyrics, { fontSize, lineHeight: fontSize * 1.5 }]}>
                         {letra}
                     </Text>
-                </ScrollView>
+                </Animated.ScrollView>
             )}
 
             {/* Controles */}
@@ -209,6 +224,15 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         marginBottom: 20,
         textAlign: 'center',
+    },
+    titleFullscreen: {
+        fontSize: 18,
+        position: 'absolute',
+        top: 10,
+        left: 20,
+        marginBottom: 0,
+        textAlign: 'left',
+        zIndex: 10,
     },
     scroll: {
         flex: 1,
