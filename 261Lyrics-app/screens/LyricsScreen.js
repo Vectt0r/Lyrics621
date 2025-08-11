@@ -8,6 +8,7 @@ import { FontSizeContext } from './FontSizeContext';
 import * as FileSystem from 'expo-file-system';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import * as NavigationBar from 'expo-navigation-bar';
+import { useNavigation } from '@react-navigation/native';
 
 export default function LyricsScreen({ route }) {
     const { letra, nomeArquivo } = route.params;
@@ -19,6 +20,7 @@ export default function LyricsScreen({ route }) {
     const scrollRef = useRef(null);
     const scrollPosition = useRef(0);
     const intervalRef = useRef(null);
+    const navigation = useNavigation();
 
     // Fonte
     const increaseFont = () => setFontSize(prev => Math.min(prev + 2, 40));
@@ -57,6 +59,14 @@ export default function LyricsScreen({ route }) {
         carregarArquivo();
     }, [nomeArquivo]);
 
+    useEffect(() => {
+        navigation.getParent()?.setOptions({
+            tabBarStyle: isFullscreen
+                ? { display: 'none' }
+                : {  display: 'flex' },
+        });
+    }, [isFullscreen, navigation]);
+
     const titulo = letra
         ? `${letra.artistName} - ${letra.trackName}`
         : nomeArquivo?.replace('.txt', '');
@@ -67,11 +77,12 @@ export default function LyricsScreen({ route }) {
     const toggleFullscreen = async () => {
         if (isFullscreen) {
             await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
-            await NavigationBar.setVisibilityAsync("visible"); // mostra barra
+            await NavigationBar.setVisibilityAsync("visible");
+            await NavigationBar.setBehaviorAsync("default");
         } else {
             await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
-            await NavigationBar.setVisibilityAsync("hidden"); // esconde barra
-            await NavigationBar.setBehaviorAsync("immersive"); // modo imersivo
+            await NavigationBar.setVisibilityAsync("hidden");
+            await NavigationBar.setBehaviorAsync("immersive");
         }
         setIsFullscreen(!isFullscreen);
     };
@@ -123,7 +134,6 @@ export default function LyricsScreen({ route }) {
                         <Ionicons name="add-circle-outline" size={28} color="#00e676" />
                     </TouchableOpacity>
 
-                    {/* Botão fullscreen */}
                     <TouchableOpacity style={{ marginHorizontal: 10 }} onPress={toggleFullscreen}>
                         <Ionicons
                             name={isFullscreen ? "contract-outline" : "expand-outline"}

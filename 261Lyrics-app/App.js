@@ -8,6 +8,7 @@ import SetListsScreen from './screens/SetListsScreen';
 import MusicasScreen from './screens/MusicasScreen';
 import { MaterialIcons } from '@expo/vector-icons';
 import { FontSizeProvider } from './screens/FontSizeContext';
+import {Easing} from "react-native";
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -21,16 +22,14 @@ function HomeStack() {
                 gestureDirection: 'horizontal',
                 gestureEnabled: true,
                 headerShown: false,
-                footerShow: false,
             }}
         >
-            <Stack.Screen name="Home" component={HomeScreen} />
+            <Stack.Screen name="HomeMain" component={HomeScreen} />
             <Stack.Screen name="Letra" component={LyricsScreen} />
         </Stack.Navigator>
     );
 }
 
-// Stack da aba Musicas
 function MusicasStack() {
     return (
         <Stack.Navigator
@@ -41,7 +40,7 @@ function MusicasStack() {
                 headerShown: false,
             }}
         >
-            <Stack.Screen name="Musicas" component={MusicasScreen} />
+            <Stack.Screen name="MusicasMain" component={MusicasScreen} />
             <Stack.Screen name="Letra" component={LyricsScreen} />
         </Stack.Navigator>
     );
@@ -53,9 +52,8 @@ export default function App() {
             <NavigationContainer>
                 <Tab.Navigator
                     screenOptions={{
-                        tabBarActiveTintColor: '#00e676',
-                        tabBarInactiveTintColor: '#aaa',
-                        tabBarStyle: { backgroundColor: '#121212' },
+                        tabBarActiveTintColor: '#000000',
+                        tabBarInactiveTintColor: '#bab9b9',
                     }}
                 >
                     <Tab.Screen
