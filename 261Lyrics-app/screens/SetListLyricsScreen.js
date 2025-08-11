@@ -145,130 +145,112 @@ export default function SetListLyricsScreen({ route, navigation }) {
     const increaseFont = () => setFontSize(prev => Math.min(prev + 2, 40));
     const decreaseFont = () => setFontSize(prev => Math.max(prev - 2, 12));
 
+    const titulo = musicas[indice]?.name || 'Sem música';
+
     return (
-        <SafeAreaView style={styles.container} {...panResponder.panHandlers}>
-            {/* Título fixo sem zoom */}
-            <Text style={[styles.title, isFullscreen && styles.titleFullscreen]}>
-                {musicas[indice]?.name || 'Sem música'}
-            </Text>
+        <SafeAreaView style={styles.screen} {...panResponder.panHandlers}>
+            <Animated.ScrollView
+                ref={scrollRef}
+                contentContainerStyle={styles.content}
+                style={{ opacity: fadeAnim }}
+                onScroll={(e) => {
+                    scrollPosition.current = e.nativeEvent.contentOffset.y;
+                }}
+                scrollEventThrottle={16}
+            >
+                <Text style={styles.title}>{titulo}</Text>
+                {loading ? (
+                    <ActivityIndicator size="large" color="#00e676" style={{ marginTop: 20 }} />
+                ) : (
+                    <Text style={[styles.lyrics, { fontSize }]}>{letra}</Text>
+                )}
+            </Animated.ScrollView>
 
-            {loading ? (
-                <ActivityIndicator size="large" color="#1DB954" style={{ marginTop: 20 }} />
-            ) : (
-                <Animated.ScrollView
-                    ref={scrollRef}
-                    style={[styles.scroll, { opacity: fadeAnim }]}
-                    onScroll={(e) => {
-                        scrollPosition.current = e.nativeEvent.contentOffset.y;
-                    }}
-                    scrollEventThrottle={16}
-                >
-                    <Text style={[styles.lyrics, { fontSize, lineHeight: fontSize * 1.5 }]}>
-                        {letra}
-                    </Text>
-                </Animated.ScrollView>
-            )}
+            {/* Controles fixos na parte inferior */}
+            <View style={styles.fixedControls}>
+                <View style={styles.row}>
+                    <TouchableOpacity style={{ marginHorizontal: 10 }} onPress={() => setScrolling(prev => !prev)}>
+                        <Ionicons name={scrolling ? "pause" : "play"} size={28} color="#00e676" />
+                    </TouchableOpacity>
 
-            {/* Controles */}
-            <View style={styles.controls}>
-                <TouchableOpacity onPress={() => setScrolling(prev => !prev)} style={styles.controlBtn}>
-                    <Ionicons name={scrolling ? "pause" : "play"} size={28} color="#1DB954" />
-                </TouchableOpacity>
+                    <TouchableOpacity
+                        style={{ marginHorizontal: 10 }}
+                        onPress={() => setSpeed(prev => Math.max(Math.round((prev - 0.1) * 10) / 10, 0.1))}
+                    >
+                        <Ionicons name="arrow-down" size={28} color="#00e676" />
+                    </TouchableOpacity>
 
-                <TouchableOpacity onPress={() => setSpeed(prev => Math.max(Math.round((prev - 0.1) * 10) / 10, 0.1))} style={styles.controlBtn}>
-                    <Ionicons name="arrow-down" size={28} color="#1DB954" />
-                </TouchableOpacity>
+                    <Text style={[styles.speedLabel, { marginHorizontal: 10 }]}>Vel {speed.toFixed(1)}x</Text>
 
-                <Text style={styles.speedLabel}>Vel {speed.toFixed(1)}x</Text>
+                    <TouchableOpacity
+                        style={{ marginHorizontal: 10 }}
+                        onPress={() => setSpeed(prev => Math.min(Math.round((prev + 0.1) * 10) / 10, 5.0))}
+                    >
+                        <Ionicons name="arrow-up" size={28} color="#00e676" />
+                    </TouchableOpacity>
 
-                <TouchableOpacity onPress={() => setSpeed(prev => Math.min(Math.round((prev + 0.1) * 10) / 10, 5.0))} style={styles.controlBtn}>
-                    <Ionicons name="arrow-up" size={28} color="#1DB954" />
-                </TouchableOpacity>
+                    <TouchableOpacity style={{ marginHorizontal: 10 }} onPress={decreaseFont}>
+                        <Ionicons name="remove-circle-outline" size={28} color="#00e676" />
+                    </TouchableOpacity>
 
-                <TouchableOpacity onPress={decreaseFont} style={styles.controlBtn}>
-                    <Ionicons name="remove-circle-outline" size={28} color="#1DB954" />
-                </TouchableOpacity>
+                    <TouchableOpacity style={{ marginHorizontal: 10 }} onPress={increaseFont}>
+                        <Ionicons name="add-circle-outline" size={28} color="#00e676" />
+                    </TouchableOpacity>
 
-                <TouchableOpacity onPress={increaseFont} style={styles.controlBtn}>
-                    <Ionicons name="add-circle-outline" size={28} color="#1DB954" />
-                </TouchableOpacity>
-
-                <TouchableOpacity onPress={toggleFullscreen} style={styles.controlBtn}>
-                    <Ionicons
-                        name={isFullscreen ? "contract-outline" : "expand-outline"}
-                        size={28}
-                        color="#1DB954"
-                    />
-                </TouchableOpacity>
-            </View>
-
-            <View style={styles.footer}>
-                <Text style={styles.footerText}>
-                    {indice + 1} / {musicas.length}
-                </Text>
+                    <TouchableOpacity style={{ marginHorizontal: 10 }} onPress={toggleFullscreen}>
+                        <Ionicons
+                            name={isFullscreen ? "contract-outline" : "expand-outline"}
+                            size={28}
+                            color="#00e676"
+                        />
+                    </TouchableOpacity>
+                </View>
             </View>
         </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
-    container: {
+    screen: {
         flex: 1,
         backgroundColor: '#121212',
-        paddingTop: 60,
-        paddingHorizontal: 20,
+    },
+    content: {
+        padding: 20,
+        paddingBottom: 100,
     },
     title: {
-        fontSize: 24,
-        color: '#1DB954',
+        color: '#00e676',
+        fontSize: 22,
         fontWeight: 'bold',
         marginBottom: 20,
         textAlign: 'center',
     },
-    titleFullscreen: {
-        fontSize: 18,
-        position: 'absolute',
-        top: 10,
-        left: 20,
-        marginBottom: 0,
-        textAlign: 'left',
-        zIndex: 10,
-    },
-    scroll: {
-        flex: 1,
-        marginBottom: 10,
-    },
     lyrics: {
         color: '#fff',
-        lineHeight: 24,
+        lineHeight: 28,
     },
-    footer: {
-        paddingVertical: 15,
-        alignItems: 'center',
-        borderTopWidth: 1,
-        borderTopColor: '#333',
-    },
-    footerText: {
-        color: '#888',
-        fontSize: 14,
-    },
-    controls: {
+    fixedControls: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
         flexDirection: 'row',
         justifyContent: 'space-around',
         paddingVertical: 10,
         backgroundColor: '#1f1f1f',
         borderTopWidth: 1,
         borderTopColor: '#333',
-        alignItems: 'center',
     },
-    controlBtn: {
-        paddingHorizontal: 5,
+    row: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        alignItems: 'center',
+        marginVertical: 5,
     },
     speedLabel: {
-        color: '#1DB954',
+        color: '#00e676',
         fontSize: 16,
-        marginHorizontal: 8,
-        minWidth: 60,
-        textAlign: 'center',
+        marginHorizontal: 5,
     },
 });
