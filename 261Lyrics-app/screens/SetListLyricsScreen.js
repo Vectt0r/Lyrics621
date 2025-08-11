@@ -162,8 +162,9 @@ export default function SetListLyricsScreen({ route, navigation }) {
                 {loading ? (
                     <ActivityIndicator size="large" color="#00e676" style={{ marginTop: 20 }} />
                 ) : (
-                    <Text style={[styles.lyrics, { fontSize }]}>{letra}</Text>
-                )}
+                    <Text style={[styles.lyrics, { fontSize, lineHeight: fontSize * 1.5 }]}>
+                        {letra}
+                    </Text>                )}
             </Animated.ScrollView>
 
             {/* Controles fixos na parte inferior */}
