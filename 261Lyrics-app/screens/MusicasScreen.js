@@ -34,7 +34,7 @@ export default function MusicasScreen() {
     return (
         <View style={styles.container}>
             <Text style={styles.titulo}>Músicas Salvas</Text>
-            <ScrollView>
+            <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
                 {arquivos.map((nome, index) => (
                     <TouchableOpacity key={index} onPress={() => abrirLetra(nome)} style={styles.item}>
                         <Text style={styles.nomeMusica}>{nome.replace('.txt', '')}</Text>
@@ -49,21 +49,22 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#121212',
-        padding: 20
+        padding: 20,
     },
     titulo: {
-        fontSize: 20,
+        fontSize: 25,
         color: '#fff',
         marginTop: 60,
-        marginBottom: 20
+        marginBottom: 20,
+        fontWeight: 'bold',
     },
     item: {
         paddingVertical: 10,
         borderBottomColor: '#444',
-        borderBottomWidth: 1
+        borderBottomWidth: 1,
     },
     nomeMusica: {
         color: '#00e676',
-        fontSize: 16
-    }
+        fontSize: 16,
+    },
 });

@@ -8,6 +8,8 @@ import SetListsScreen from './screens/SetListsScreen';
 import MusicasScreen from './screens/MusicasScreen';
 import { MaterialIcons } from '@expo/vector-icons';
 import { FontSizeProvider } from './screens/FontSizeContext';
+import SetListMusicas from './screens/SetListMusicas'; // importe a nova tela
+
 import {Easing} from "react-native";
 
 const Stack = createStackNavigator();
@@ -46,6 +48,22 @@ function MusicasStack() {
     );
 }
 
+function SetListsStack() {
+    return (
+        <Stack.Navigator
+            screenOptions={{
+                ...TransitionPresets.SlideFromRightIOS,
+                gestureDirection: 'horizontal',
+                gestureEnabled: true,
+                headerShown: false,
+            }}
+        >
+            <Stack.Screen name="SetListsMain" component={SetListsScreen} />
+            <Stack.Screen name="SetListMusicas" component={SetListMusicas} />
+        </Stack.Navigator>
+    );
+}
+
 export default function App() {
     return (
         <FontSizeProvider>
@@ -68,7 +86,7 @@ export default function App() {
                     />
                     <Tab.Screen
                         name="SetLists"
-                        component={SetListsScreen}
+                        component={SetListsStack}
                         options={{
                             headerShown: false,
                             tabBarIcon: ({ color, size }) => (

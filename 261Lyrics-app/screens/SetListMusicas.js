@@ -1,119 +1,91 @@
 import React, { useState, useEffect } from 'react';
 import {
-    View, Text, TouchableOpacity, Modal, TextInput, StyleSheet, ScrollView, Alert
+    View,
+    Text,
+    TouchableOpacity,
+    Modal,
+    TextInput,
+    StyleSheet,
+    ScrollView,
+    Alert,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export default function SetListsScreen({ navigation }) {
+export default function SetListMusicas({ route, navigation }) {
+    const { setList } = route.params;
+
     const [modalVisible, setModalVisible] = useState(false);
-    const [setListName, setSetListName] = useState('');
-    const [setLists, setSetLists] = useState([]);
+    const [musicaNome, setMusicaNome] = useState('');
+    const [musicas, setMusicas] = useState(setList.musicas || []);
 
-    // Carregar SetLists do AsyncStorage ao montar
-    useEffect(() => {
-        loadSetLists();
-    }, []);
-
-    // FunÃ§Ã£o para carregar SetLists
-    const loadSetLists = async () => {
+    // Salvar músicas no AsyncStorage e atualizar setList
+    const saveMusicas = async (novasMusicas) => {
         try {
             const jsonValue = await AsyncStorage.getItem('@setlists');
-            if (jsonValue != null) {
-                setSetLists(JSON.parse(jsonValue));
-            }
+            let allSetLists = jsonValue ? JSON.parse(jsonValue) : [];
+
+            // Atualizar o setList atual com novas músicas
+            allSetLists = allSetLists.map((item) =>
+                item.id === setList.id ? { ...item, musicas: novasMusicas } : item
+            );
+
+            await AsyncStorage.setItem('@setlists', JSON.stringify(allSetLists));
         } catch (e) {
-            console.error('Erro ao carregar SetLists', e);
+            console.error('Erro ao salvar músicas', e);
         }
     };
 
-    // Salvar SetLists no AsyncStorage
-    const saveSetLists = async (newSetLists) => {
-        try {
-            const jsonValue = JSON.stringify(newSetLists);
-            await AsyncStorage.setItem('@setlists', jsonValue);
-        } catch (e) {
-            console.error('Erro ao salvar SetLists', e);
-        }
-    };
-
-    // Adicionar novo SetList
     const handleSave = () => {
-        if (!setListName.trim()) return;
+        if (!musicaNome.trim()) return;
 
-        // Gerar ID simples (timestamp)
-        const newSetList = { id: Date.now().toString(), name: setListName };
-        const updatedSetLists = [...setLists, newSetList];
-
-        setSetLists(updatedSetLists);
-        saveSetLists(updatedSetLists);
-
-        setSetListName('');
+        const novasMusicas = [...musicas, { name: musicaNome }];
+        setMusicas(novasMusicas);
+        saveMusicas(novasMusicas);
+        setMusicaNome('');
         setModalVisible(false);
     };
 
-    // Excluir SetList com confirmaÃ§Ã£o
-    const handleDelete = (id) => {
+    const handleDeleteMusica = (index) => {
         Alert.alert(
-            'Excluir SetList',
-            'Tem certeza que deseja excluir este SetList?',
+            'Excluir música',
+            'Deseja excluir essa música?',
             [
                 { text: 'Cancelar', style: 'cancel' },
                 {
                     text: 'Excluir',
                     style: 'destructive',
                     onPress: () => {
-                        const filtered = setLists.filter(item => item.id !== id);
-                        setSetLists(filtered);
-                        saveSetLists(filtered);
-                    }
-                }
+                        const novasMusicas = musicas.filter((_, i) => i !== index);
+                        setMusicas(novasMusicas);
+                        saveMusicas(novasMusicas);
+                    },
+                },
             ],
             { cancelable: true }
         );
     };
 
-    // Navegar para SetListMusicas, passando setList completo
-    const visualizarSetList = (item) => {
-        navigation.navigate('SetListMusicas', { setList: item });
-    };
-
-    const baixarSetList = (item) => {
-        console.log('Baixando Set List:', item.name);
-    };
-
     return (
         <View style={styles.container}>
-            <Text style={styles.titulo}>SetLists Atuais</Text>
+            <Text style={styles.titulo}>SetList - {setList.name}</Text>
 
-            <ScrollView
-                style={styles.results}
-                contentContainerStyle={{ paddingBottom: 100 }}
-            >
-                {setLists.map((item) => (
-                    <View key={item.id} style={styles.resultItem}>
+            <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
+                {musicas.map((item, index) => (
+                    <View key={index} style={styles.resultItem}>
                         <Text style={styles.songTitle}>{item.name}</Text>
 
-                        <View style={styles.actionRow}>
-                            <TouchableOpacity
-                                style={styles.visualizarBtn}
-                                onPress={() => visualizarSetList(item)}
-                            >
-                                <Text style={styles.actionText}>Visualizar</Text>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                style={styles.deleteBtn}
-                                onPress={() => handleDelete(item.id)}
-                            >
-                                <Text style={styles.actionText}>Excluir</Text>
-                            </TouchableOpacity>
-                        </View>
+                        <TouchableOpacity
+                            style={styles.deleteBtn}
+                            onPress={() => handleDeleteMusica(index)}
+                        >
+                            <Text style={styles.actionText}>Excluir</Text>
+                        </TouchableOpacity>
                     </View>
                 ))}
             </ScrollView>
 
             <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
-                <Text style={styles.addButtonText}>Adicionar Set List</Text>
+                <Text style={styles.addButtonText}>Adicionar Música</Text>
             </TouchableOpacity>
 
             <Modal
@@ -124,16 +96,19 @@ export default function SetListsScreen({ navigation }) {
             >
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalContent}>
-                        <Text style={styles.modalTitle}>Novo Set List</Text>
+                        <Text style={styles.modalTitle}>Nova Música</Text>
                         <TextInput
                             style={styles.input}
-                            placeholder="Digite o nome"
+                            placeholder="Digite o nome da música"
                             placeholderTextColor="#aaa"
-                            value={setListName}
-                            onChangeText={setSetListName}
+                            value={musicaNome}
+                            onChangeText={setMusicaNome}
                         />
                         <View style={styles.modalButtons}>
-                            <TouchableOpacity style={styles.cancelButton} onPress={() => setModalVisible(false)}>
+                            <TouchableOpacity
+                                style={styles.cancelButton}
+                                onPress={() => setModalVisible(false)}
+                            >
                                 <Text style={styles.buttonText}>Cancelar</Text>
                             </TouchableOpacity>
                             <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
@@ -148,6 +123,8 @@ export default function SetListsScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
+    // Estilos iguais ao que você já usou, só adicionar deleteBtn:
+
     container: {
         flex: 1,
         backgroundColor: '#121212',
@@ -157,45 +134,30 @@ const styles = StyleSheet.create({
         fontSize: 25,
         color: '#fff',
         marginTop: 60,
-        marginBottom: 20,
+        marginBottom: 5,
         fontWeight: 'bold',
-    },
-    results: {
-        flex: 1,
     },
     resultItem: {
         backgroundColor: '#1e1e1e',
         padding: 12,
         borderRadius: 8,
         marginBottom: 10,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
     },
     songTitle: {
         color: '#fff',
-        fontSize: 20,
-        marginBottom: 10,
-    },
-    actionRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-    },
-    visualizarBtn: {
-        backgroundColor: '#f8f9fa',
-        padding: 8,
-        borderRadius: 5,
-        flex: 1,
-        marginRight: 5,
-        alignItems: 'center',
+        fontSize: 16,
     },
     deleteBtn: {
         backgroundColor: '#dc3545',
-        padding: 8,
-        borderRadius: 5,
-        flex: 1,
-        marginLeft: 5,
-        alignItems: 'center',
+        paddingVertical: 6,
+        paddingHorizontal: 12,
+        borderRadius: 6,
     },
     actionText: {
-        color: '070707',
+        color: '#fff',
         fontWeight: 'bold',
     },
     addButton: {
