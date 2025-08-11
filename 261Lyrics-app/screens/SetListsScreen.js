@@ -9,12 +9,10 @@ export default function SetListsScreen({ navigation }) {
     const [setListName, setSetListName] = useState('');
     const [setLists, setSetLists] = useState([]);
 
-    // Carregar SetLists do AsyncStorage ao montar
     useEffect(() => {
         loadSetLists();
     }, []);
 
-    // Função para carregar SetLists
     const loadSetLists = async () => {
         try {
             const jsonValue = await AsyncStorage.getItem('@setlists');
@@ -26,22 +24,19 @@ export default function SetListsScreen({ navigation }) {
         }
     };
 
-    // Salvar SetLists no AsyncStorage
     const saveSetLists = async (newSetLists) => {
         try {
-            const jsonValue = JSON.stringify(newSetLists);
-            await AsyncStorage.setItem('@setlists', jsonValue);
+            await AsyncStorage.setItem('@setlists', JSON.stringify(newSetLists));
         } catch (e) {
             console.error('Erro ao salvar SetLists', e);
         }
     };
 
-    // Adicionar novo SetList
+    // Criar novo setList já com 'musicas' vazio
     const handleSave = () => {
         if (!setListName.trim()) return;
 
-        // Gerar ID simples (timestamp)
-        const newSetList = { id: Date.now().toString(), name: setListName };
+        const newSetList = { id: Date.now().toString(), name: setListName, musicas: [] };
         const updatedSetLists = [...setLists, newSetList];
 
         setSetLists(updatedSetLists);
@@ -51,7 +46,6 @@ export default function SetListsScreen({ navigation }) {
         setModalVisible(false);
     };
 
-    // Excluir SetList com confirmação
     const handleDelete = (id) => {
         Alert.alert(
             'Excluir SetList',
@@ -72,13 +66,10 @@ export default function SetListsScreen({ navigation }) {
         );
     };
 
-    // Navegar para SetListMusicas, passando setList completo
+    // Passa o setList com musicas garantido
     const visualizarSetList = (item) => {
-        navigation.navigate('SetListMusicas', { setList: item });
-    };
-
-    const baixarSetList = (item) => {
-        console.log('Baixando Set List:', item.name);
+        const setListComMusicas = { ...item, musicas: item.musicas || [] };
+        navigation.navigate('SetListMusicas', { setList: setListComMusicas });
     };
 
     return (
@@ -148,36 +139,17 @@ export default function SetListsScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#121212',
-        padding: 20,
-    },
-    titulo: {
-        fontSize: 25,
-        color: '#fff',
-        marginTop: 60,
-        marginBottom: 20,
-        fontWeight: 'bold',
-    },
-    results: {
-        flex: 1,
-    },
+    container: { flex: 1, backgroundColor: '#121212', padding: 20 },
+    titulo: { fontSize: 25, color: '#fff', marginTop: 60, marginBottom: 20, fontWeight: 'bold' },
+    results: { flex: 1 },
     resultItem: {
         backgroundColor: '#1e1e1e',
         padding: 12,
         borderRadius: 8,
         marginBottom: 10,
     },
-    songTitle: {
-        color: '#fff',
-        fontSize: 20,
-        marginBottom: 10,
-    },
-    actionRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-    },
+    songTitle: { color: '#fff', fontSize: 20, marginBottom: 10 },
+    actionRow: { flexDirection: 'row', justifyContent: 'space-between' },
     visualizarBtn: {
         backgroundColor: '#f8f9fa',
         padding: 8,
@@ -194,10 +166,7 @@ const styles = StyleSheet.create({
         marginLeft: 5,
         alignItems: 'center',
     },
-    actionText: {
-        color: '070707',
-        fontWeight: 'bold',
-    },
+    actionText: { color: '#070707', fontWeight: 'bold' },
     addButton: {
         backgroundColor: '#1DB954',
         padding: 15,
@@ -209,11 +178,7 @@ const styles = StyleSheet.create({
         right: 20,
         elevation: 5,
     },
-    addButtonText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
+    addButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
     modalOverlay: {
         flex: 1,
         backgroundColor: 'rgba(0,0,0,0.6)',
@@ -226,12 +191,7 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         width: '80%',
     },
-    modalTitle: {
-        color: '#fff',
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginBottom: 15,
-    },
+    modalTitle: { color: '#fff', fontSize: 18, fontWeight: 'bold', marginBottom: 15 },
     input: {
         backgroundColor: '#333',
         color: '#fff',
@@ -240,10 +200,7 @@ const styles = StyleSheet.create({
         paddingVertical: 8,
         marginBottom: 20,
     },
-    modalButtons: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-    },
+    modalButtons: { flexDirection: 'row', justifyContent: 'space-between' },
     cancelButton: {
         backgroundColor: '#555',
         padding: 10,
@@ -257,9 +214,5 @@ const styles = StyleSheet.create({
         borderRadius: 6,
         flex: 1,
     },
-    buttonText: {
-        color: '#fff',
-        fontWeight: 'bold',
-        textAlign: 'center',
-    },
+    buttonText: { color: '#fff', fontWeight: 'bold', textAlign: 'center' },
 });

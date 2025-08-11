@@ -9,6 +9,7 @@ import MusicasScreen from './screens/MusicasScreen';
 import { MaterialIcons } from '@expo/vector-icons';
 import { FontSizeProvider } from './screens/FontSizeContext';
 import SetListMusicas from './screens/SetListMusicas'; // importe a nova tela
+import SetListLyricsScreen from './screens/SetListLyricsScreen'; // importe a nova tela
 
 import {Easing} from "react-native";
 
@@ -60,6 +61,7 @@ function SetListsStack() {
         >
             <Stack.Screen name="SetListsMain" component={SetListsScreen} />
             <Stack.Screen name="SetListMusicas" component={SetListMusicas} />
+            <Stack.Screen name="SetListLyricsScreen" component={SetListLyricsScreen} />
         </Stack.Navigator>
     );
 }

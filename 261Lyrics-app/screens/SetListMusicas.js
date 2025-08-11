@@ -127,7 +127,16 @@ export default function SetListMusicas({ route, navigation }) {
             <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
                 {musicas.map((item, index) => (
                     <View key={index} style={styles.resultItem}>
-                        <Text style={styles.songTitle}>{item.name}</Text>
+                        <TouchableOpacity
+                            onPress={() => navigation.navigate('SetListLyricsScreen', {
+                                musicas,        // lista completa
+                                indexAtual: index,  // índice da música clicada
+                            })}
+                            style={{ flex: 1 }} // para expandir e clicar na área do texto
+                        >
+                            <Text style={styles.songTitle}>{item.name}</Text>
+                        </TouchableOpacity>
+
                         <TouchableOpacity
                             style={styles.deleteBtn}
                             onPress={() => handleDeleteMusica(index)}
