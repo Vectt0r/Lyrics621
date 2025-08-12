@@ -5,7 +5,7 @@ import { createStackNavigator, TransitionPresets } from '@react-navigation/stack
 import HomeScreen from './screens/HomeScreen';
 import LyricsScreen from './screens/LyricsScreen';
 import SetListsScreen from './screens/SetListsScreen';
-import MusicasScreen from './screens/MusicasScreen';
+import MusicScreen from './screens/MusicScreen';
 import { MaterialIcons } from '@expo/vector-icons';
 import { FontSizeProvider } from './screens/FontSizeContext';
 import SetListMusicas from './screens/SetListMusicas'; // importe a nova tela
@@ -43,7 +43,7 @@ function MusicasStack() {
                 headerShown: false,
             }}
         >
-            <Stack.Screen name="MusicasMain" component={MusicasScreen} />
+            <Stack.Screen name="MusicasMain" component={MusicScreen} />
             <Stack.Screen name="Letra" component={LyricsScreen} />
         </Stack.Navigator>
     );

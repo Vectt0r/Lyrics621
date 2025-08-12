@@ -4,7 +4,7 @@ import * as FileSystem from 'expo-file-system';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
 
-export default function MusicasScreen() {
+export default function MusicScreen() {
     const [arquivos, setArquivos] = useState([]);
     const navigation = useNavigation();
 
