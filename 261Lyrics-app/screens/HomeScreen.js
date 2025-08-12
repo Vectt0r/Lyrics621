@@ -164,7 +164,7 @@ const styles = StyleSheet.create({
         padding: 10,
     },
     songTitle: {
-        color: '#00e676',
+        color: '#fff',
         fontWeight: 'bold',
         fontSize: 16,
         marginBottom: 10,

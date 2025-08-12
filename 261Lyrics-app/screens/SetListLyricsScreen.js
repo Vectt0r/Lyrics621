@@ -63,7 +63,7 @@ export default function SetListLyricsScreen({ route, navigation }) {
                 setLoading(false);
                 Animated.timing(fadeAnim, {
                     toValue: 1,
-                    duration: 200,
+                    duration: 400,
                     useNativeDriver: true,
                 }).start();
             }

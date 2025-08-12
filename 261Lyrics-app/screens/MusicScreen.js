@@ -94,8 +94,8 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     nomeMusica: {
-        color: '#00e676',
-        fontSize: 20,
+        color: '#fff',
+        fontSize: 16,
     },
     deleteButton: {
         paddingHorizontal: 10,

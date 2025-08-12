@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as FileSystem from 'expo-file-system';
+import {MaterialIcons} from "@expo/vector-icons";
 
 export default function SetListMusicas({ route, navigation }) {
     const { setList } = route.params;
@@ -183,10 +184,10 @@ export default function SetListMusicas({ route, navigation }) {
                             </TouchableOpacity>
 
                             <TouchableOpacity
-                                style={styles.deleteBtn}
+                                style={styles.deleteButton}
                                 onPress={() => handleDeleteMusica(index)}
                             >
-                                <Text style={styles.actionText}>Excluir</Text>
+                                <MaterialIcons name="delete" size={28} color="#dc3545" />
                             </TouchableOpacity>
                         </View>
                     );
@@ -315,6 +316,9 @@ const styles = StyleSheet.create({
         borderRadius: 6,
         flex: 1,
         marginRight: 10,
+    },
+    deleteButton: {
+        paddingHorizontal: 10,
     },
     saveButton: { backgroundColor: '#1DB954', padding: 10, borderRadius: 6, flex: 1 },
     buttonText: { color: '#fff', fontWeight: 'bold', textAlign: 'center' },
