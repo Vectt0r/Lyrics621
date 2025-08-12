@@ -10,6 +10,9 @@ import {
     TouchableOpacity,
     SafeAreaView,
     Animated,
+    Platform,
+    ToastAndroid,
+    Alert
 } from 'react-native';
 import * as FileSystem from 'expo-file-system';
 import { useFocusEffect } from '@react-navigation/native';
@@ -31,13 +34,17 @@ export default function SetListLyricsScreen({ route, navigation }) {
     const intervalRef = useRef(null);
     const [isFullscreen, setIsFullscreen] = useState(false);
 
-    // Animated opacity para fade
     const fadeAnim = useRef(new Animated.Value(1)).current;
 
-    // Carregar letra com fade
+    // refs para usar no PanResponder
+    const indiceRef = useRef(indice);
+    useEffect(() => { indiceRef.current = indice; }, [indice]);
+
+    const isFullscreenRef = useRef(isFullscreen);
+    useEffect(() => { isFullscreenRef.current = isFullscreen; }, [isFullscreen]);
+
     const carregarLetraComFade = async (nomeMusica) => {
         setLoading(true);
-        // Fade out
         Animated.timing(fadeAnim, {
             toValue: 0,
             duration: 200,
@@ -54,7 +61,6 @@ export default function SetListLyricsScreen({ route, navigation }) {
                 console.error(error);
             } finally {
                 setLoading(false);
-                // Fade in
                 Animated.timing(fadeAnim, {
                     toValue: 1,
                     duration: 200,
@@ -70,16 +76,31 @@ export default function SetListLyricsScreen({ route, navigation }) {
         }
     }, [indice]);
 
-    // Swipe
+    // PanResponder
     const panResponder = useRef(
         PanResponder.create({
             onMoveShouldSetPanResponder: (_, gestureState) =>
                 Math.abs(gestureState.dx) > 20 && Math.abs(gestureState.dy) < 50,
             onPanResponderRelease: (_, gestureState) => {
                 const dx = gestureState.dx;
+
+                // Swipe esquerda → próxima música
                 if (dx < -50) {
                     setIndice((oldIndice) => Math.min(oldIndice + 1, musicas.length - 1));
-                } else if (dx > 50) {
+                }
+
+                // Swipe direita → anterior ou voltar
+                else if (dx > 50) {
+                    // Bloqueia voltar se fullscreen + primeira música
+                    if (indiceRef.current === 0 && isFullscreenRef.current) {
+                        if (Platform.OS === 'android') {
+                            ToastAndroid.show('Ação bloqueada em tela cheia', ToastAndroid.SHORT);
+                        } else {
+                            Alert.alert('', 'Ação bloqueada em tela cheia');
+                        }
+                        return;
+                    }
+
                     setIndice((oldIndice) => {
                         if (oldIndice > 0) return Math.max(oldIndice - 1, 0);
                         else {
@@ -92,7 +113,7 @@ export default function SetListLyricsScreen({ route, navigation }) {
         })
     ).current;
 
-    // Bot�o voltar Android
+    // Botão voltar físico
     useFocusEffect(
         useCallback(() => {
             const onBackPress = () => {
@@ -139,13 +160,17 @@ export default function SetListLyricsScreen({ route, navigation }) {
         navigation.getParent()?.setOptions({
             tabBarStyle: isFullscreen ? { display: 'none' } : { display: 'flex' },
         });
+
+        // Desabilita gesto de navegação enquanto fullscreen
+        navigation.setOptions?.({ gestureEnabled: !isFullscreen });
+        navigation.getParent?.()?.setOptions?.({ gestureEnabled: !isFullscreen });
     }, [isFullscreen, navigation]);
 
     // Zoom controls
     const increaseFont = () => setFontSize(prev => Math.min(prev + 2, 40));
     const decreaseFont = () => setFontSize(prev => Math.max(prev - 2, 12));
 
-    const titulo = musicas[indice]?.name || 'Sem m�sica';
+    const titulo = musicas[indice]?.name || 'Sem música';
 
     return (
         <SafeAreaView style={styles.screen} {...panResponder.panHandlers}>
@@ -164,10 +189,11 @@ export default function SetListLyricsScreen({ route, navigation }) {
                 ) : (
                     <Text style={[styles.lyrics, { fontSize, lineHeight: fontSize * 1.5 }]}>
                         {letra}
-                    </Text>                )}
+                    </Text>
+                )}
             </Animated.ScrollView>
 
-            {/* Controles fixos na parte inferior */}
+            {/* Controles fixos */}
             <View style={styles.fixedControls}>
                 <View style={styles.row}>
                     <TouchableOpacity style={{ marginHorizontal: 10 }} onPress={() => setScrolling(prev => !prev)}>
