@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
     visualizarBtn: {
         backgroundColor: '#f8f9fa',
         padding: 8,
-        borderRadius: 5,
+        borderRadius: 25,
         flex: 1,
         marginRight: 5,
         alignItems: 'center',
@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
     deleteBtn: {
         backgroundColor: '#dc3545',
         padding: 8,
-        borderRadius: 5,
+        borderRadius: 25,
         flex: 1,
         marginLeft: 5,
         alignItems: 'center',

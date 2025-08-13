@@ -176,7 +176,7 @@ const styles = StyleSheet.create({
     visualizarBtn: {
         backgroundColor: '#f8f9fa',
         padding: 8,
-        borderRadius: 5,
+        borderRadius: 20,
         flex: 1,
         marginRight: 5,
         alignItems: 'center',
@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
     baixarBtn: {
         backgroundColor: '#00e676',
         padding: 8,
-        borderRadius: 5,
+        borderRadius: 20,
         flex: 1,
         marginLeft: 5,
         alignItems: 'center',
