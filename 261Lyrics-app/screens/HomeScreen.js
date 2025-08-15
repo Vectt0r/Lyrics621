@@ -1,20 +1,42 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, Alert , Image } from 'react-native';
+import {
+    StyleSheet,
+    Text,
+    View,
+    TextInput,
+    TouchableOpacity,
+    ScrollView,
+    Alert,
+    Image,
+    ActivityIndicator
+} from 'react-native';
 import axios from 'axios';
 import * as FileSystem from 'expo-file-system';
-const logo = require('../images/logo.png'); // Caminho real da imagem no seu projeto
+
+const logo = require('../images/logo.png');
 
 export default function HomeScreen({ navigation }) {
     const [query, setQuery] = useState('');
     const [letras, setLetras] = useState([]);
+    const [loading, setLoading] = useState(false); // novo estado
 
     const buscarLetra = async () => {
+        if (!query.trim()) {
+            Alert.alert('Aviso', 'Digite algo para buscar.');
+            return;
+        }
+
+        setLoading(true); // começa carregamento
         try {
-            const response = await axios.get(`https://lrclib.net/api/search?q=${encodeURIComponent(query)}`);
+            const response = await axios.get(
+                `https://lrclib.net/api/search?q=${encodeURIComponent(query)}`
+            );
             setLetras(response.data);
         } catch (error) {
             console.error('Erro ao buscar letras:', error.message);
             setLetras([]);
+        } finally {
+            setLoading(false); // termina carregamento
         }
     };
 
@@ -22,7 +44,10 @@ export default function HomeScreen({ navigation }) {
         const nomeArquivo = `${item.artistName} - ${item.trackName}.txt`;
         const caminho = FileSystem.documentDirectory + nomeArquivo;
         try {
-            await FileSystem.writeAsStringAsync(caminho, item.plainLyrics || 'Letra não disponível.');
+            await FileSystem.writeAsStringAsync(
+                caminho,
+                item.plainLyrics || 'Letra não disponível.'
+            );
             Alert.alert('Sucesso', `Letra salva como:\n${nomeArquivo}`);
         } catch (err) {
             console.error(err);
@@ -36,6 +61,7 @@ export default function HomeScreen({ navigation }) {
                 <Image source={logo} style={styles.logo} />
                 <Text style={styles.titleText}>Lyrics</Text>
             </View>
+
             <TextInput
                 style={styles.input}
                 placeholder="Digite artista, música ou ambos"
@@ -48,29 +74,40 @@ export default function HomeScreen({ navigation }) {
                 <Text style={styles.buttonText}>Buscar</Text>
             </TouchableOpacity>
 
-            <ScrollView style={styles.results}>
-                {letras.map((item, index) => (
-                    <View key={index} style={styles.resultItem}>
-                        <Text style={styles.songTitle}>{item.artistName} - {item.trackName}</Text>
+            {loading ? (
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                    <ActivityIndicator size="large" color="#00e676" />
+                    <Text style={{ color: '#fff', marginTop: 10 }}>Carregando...</Text>
+                </View>
+            ) : (
+                <ScrollView style={styles.results}>
+                    {letras.map((item, index) => (
+                        <View key={index} style={styles.resultItem}>
+                            <Text style={styles.songTitle}>
+                                {item.artistName} - {item.trackName}
+                            </Text>
 
-                        <View style={styles.actionRow}>
-                            <TouchableOpacity
-                                style={styles.visualizarBtn}
-                                onPress={() => navigation.navigate('Letra', { letra: item })}
-                            >
-                                <Text style={styles.actionText}>Visualizar</Text>
-                            </TouchableOpacity>
+                            <View style={styles.actionRow}>
+                                <TouchableOpacity
+                                    style={styles.visualizarBtn}
+                                    onPress={() =>
+                                        navigation.navigate('Letra', { letra: item })
+                                    }
+                                >
+                                    <Text style={styles.actionText}>Visualizar</Text>
+                                </TouchableOpacity>
 
-                            <TouchableOpacity
-                                style={styles.baixarBtn}
-                                onPress={() => baixarLetra(item)}
-                            >
-                                <Text style={styles.actionText}>Baixar</Text>
-                            </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={styles.baixarBtn}
+                                    onPress={() => baixarLetra(item)}
+                                >
+                                    <Text style={styles.actionText}>Baixar</Text>
+                                </TouchableOpacity>
+                            </View>
                         </View>
-                    </View>
-                ))}
-            </ScrollView>
+                    ))}
+                </ScrollView>
+            )}
         </View>
     );
 }
@@ -88,23 +125,20 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         marginBottom: 40,
     },
-
     logo: {
         width: 70,
         height: 50,
         marginRight: 10,
     },
-
     titleText: {
         color: '#fff',
         fontSize: 32,
         fontWeight: 'bold',
     },
-
     input: {
         backgroundColor: '#1e1e1e',
         color: '#fff',
-        padding: 10,
+        padding: 20,
         borderRadius: 5,
         marginBottom: 25,
     },
@@ -130,7 +164,7 @@ const styles = StyleSheet.create({
         padding: 10,
     },
     songTitle: {
-        color: '#00e676',
+        color: '#fff',
         fontWeight: 'bold',
         fontSize: 16,
         marginBottom: 10,
@@ -142,7 +176,7 @@ const styles = StyleSheet.create({
     visualizarBtn: {
         backgroundColor: '#f8f9fa',
         padding: 8,
-        borderRadius: 5,
+        borderRadius: 20,
         flex: 1,
         marginRight: 5,
         alignItems: 'center',
@@ -150,7 +184,7 @@ const styles = StyleSheet.create({
     baixarBtn: {
         backgroundColor: '#00e676',
         padding: 8,
-        borderRadius: 5,
+        borderRadius: 20,
         flex: 1,
         marginLeft: 5,
         alignItems: 'center',

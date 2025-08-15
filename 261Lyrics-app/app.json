@@ -3,8 +3,8 @@
     "name": "261Lyrics-app",
     "slug": "261Lyrics-app",
     "version": "1.0.0",
-    "orientation": "default",
-    "icon": "./assets/icon.png",
+    "orientation": "portrait",
+    "icon": "./assets/musica.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
@@ -20,10 +20,16 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.vecttor.x261Lyricsapp"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "e8995aca-7aa5-42df-ad95-4cd216558f64"
+      }
     }
   }
 }

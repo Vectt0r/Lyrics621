@@ -2,12 +2,16 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator, TransitionPresets } from '@react-navigation/stack';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import HomeScreen from './screens/HomeScreen';
 import LyricsScreen from './screens/LyricsScreen';
 import SetListsScreen from './screens/SetListsScreen';
-import MusicasScreen from './screens/MusicasScreen';
+import MusicScreen from './screens/MusicScreen';
 import { MaterialIcons } from '@expo/vector-icons';
+import { enableScreens } from 'react-native-screens';
 import { FontSizeProvider } from './screens/FontSizeContext';
+import SetListMusicas from './screens/SetListMusicas'; // importe a nova tela
+import SetListLyricsScreen from './screens/SetListLyricsScreen'; // importe a nova tela
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -23,13 +27,12 @@ function HomeStack() {
                 headerShown: false,
             }}
         >
-            <Stack.Screen name="Home" component={HomeScreen} />
+            <Stack.Screen name="HomeMain" component={HomeScreen} />
             <Stack.Screen name="Letra" component={LyricsScreen} />
         </Stack.Navigator>
     );
 }
 
-// Stack da aba Musicas
 function MusicasStack() {
     return (
         <Stack.Navigator
@@ -40,55 +43,76 @@ function MusicasStack() {
                 headerShown: false,
             }}
         >
-            <Stack.Screen name="Musicas" component={MusicasScreen} />
+            <Stack.Screen name="MusicasMain" component={MusicScreen} />
             <Stack.Screen name="Letra" component={LyricsScreen} />
         </Stack.Navigator>
     );
 }
 
+function SetListsStack() {
+    return (
+        <Stack.Navigator
+            screenOptions={{
+                ...TransitionPresets.SlideFromRightIOS,
+                gestureDirection: 'horizontal',
+                gestureEnabled: true,
+                headerShown: false,
+            }}
+        >
+            <Stack.Screen name="SetListsMain" component={SetListsScreen} />
+            <Stack.Screen name="SetListMusicas" component={SetListMusicas} />
+            <Stack.Screen name="SetListLyricsScreen" component={SetListLyricsScreen} />
+        </Stack.Navigator>
+    );
+}
+
+enableScreens();
+
 export default function App() {
     return (
-        <FontSizeProvider>
-            <NavigationContainer>
-                <Tab.Navigator
-                    screenOptions={{
-                        tabBarActiveTintColor: '#00e676',
-                        tabBarInactiveTintColor: '#aaa',
-                        tabBarStyle: { backgroundColor: '#121212' },
-                    }}
-                >
-                    <Tab.Screen
-                        name="Home"
-                        component={HomeStack}
-                        options={{
-                            headerShown: false,
-                            tabBarIcon: ({ color, size }) => (
-                                <MaterialIcons name="home" color={color} size={size} />
-                            ),
+        <SafeAreaProvider>
+            <FontSizeProvider>
+                <NavigationContainer>
+                    <Tab.Navigator
+                        screenOptions={{
+                            tabBarActiveTintColor: '#000000',
+                            tabBarInactiveTintColor: '#bab9b9',
                         }}
-                    />
-                    <Tab.Screen
-                        name="SetLists"
-                        component={SetListsScreen}
-                        options={{
-                            headerShown: false,
-                            tabBarIcon: ({ color, size }) => (
-                                <MaterialIcons name="playlist-play" color={color} size={size} />
-                            ),
-                        }}
-                    />
-                    <Tab.Screen
-                        name="Musicas"
-                        component={MusicasStack}
-                        options={{
-                            headerShown: false,
-                            tabBarIcon: ({ color, size }) => (
-                                <MaterialIcons name="music-note" color={color} size={size} />
-                            ),
-                        }}
-                    />
-                </Tab.Navigator>
-            </NavigationContainer>
-        </FontSizeProvider>
-    );
+                    >
+                        <Tab.Screen
+                            name="Home"
+                            component={HomeStack}
+                            options={{
+                                headerShown: false,
+                                tabBarIcon: ({ color, size }) => (
+                                    <MaterialIcons name="home" color={color} size={size} />
+                                ),
+                            }}
+                        />
+                        <Tab.Screen
+                            name="SetLists"
+                            component={SetListsStack}
+                            options={{
+                                headerShown: false,
+                                tabBarIcon: ({ color, size }) => (
+                                    <MaterialIcons name="playlist-play" color={color} size={size} />
+                                ),
+                            }}
+                        />
+                        <Tab.Screen
+                            name="Musicas"
+                            component={MusicasStack}
+                            options={{
+                                headerShown: false,
+                                tabBarIcon: ({ color, size }) => (
+                                    <MaterialIcons name="music-note" color={color} size={size} />
+                                ),
+                            }}
+                        />
+                    </Tab.Navigator>
+                </NavigationContainer>
+            </FontSizeProvider>
+        </SafeAreaProvider>
+
+            );
 }
