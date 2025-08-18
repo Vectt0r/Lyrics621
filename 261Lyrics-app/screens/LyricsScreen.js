@@ -98,7 +98,7 @@ export default function LyricsScreen({ route }) {
                 scrollEventThrottle={16}
             >
                 <Text style={styles.title}>{titulo}</Text>
-                <Text style={[styles.lyrics, { fontSize }]}>
+                <Text style={[styles.lyrics, { fontSize, lineHeight: fontSize * 1.5 }]}>
                     {textoLetra}
                 </Text>
             </ScrollView>
