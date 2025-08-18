@@ -1,15 +1,15 @@
-import React, {useState, useEffect, useRef, useCallback, useContext} from 'react';
+// SetListLyricsScreen.js
+import React, { useState, useEffect, useRef, useCallback, useContext } from 'react';
 import {
     View,
     Text,
     StyleSheet,
-    ScrollView,
-    PanResponder,
-    BackHandler,
-    ActivityIndicator,
-    TouchableOpacity,
     SafeAreaView,
     Animated,
+    ActivityIndicator,
+    TouchableOpacity,
+    PanResponder,
+    BackHandler,
     Platform,
     ToastAndroid,
     Alert
@@ -27,30 +27,24 @@ export default function SetListLyricsScreen({ route, navigation }) {
     const [letra, setLetra] = useState('');
     const [loading, setLoading] = useState(false);
     const scrollRef = useRef(null);
-
-    const { fontSize, setFontSize } = useContext(FontSizeContext);
-    const [scrolling, setScrolling] = useState(false);
-    const [speed, setSpeed] = useState(1);
-    const scrollPosition = useRef(0);
     const intervalRef = useRef(null);
-    const [isFullscreen, setIsFullscreen] = useState(false);
-
+    const scrollPosition = useRef(0);
     const fadeAnim = useRef(new Animated.Value(1)).current;
 
-    // refs para usar no PanResponder
+    const { fontSize, setFontSize, speed, setSpeed } = useContext(FontSizeContext);
+    const [scrolling, setScrolling] = useState(false);
+    const [isFullscreen, setIsFullscreen] = useState(false);
+
     const indiceRef = useRef(indice);
     useEffect(() => { indiceRef.current = indice; }, [indice]);
 
     const isFullscreenRef = useRef(isFullscreen);
     useEffect(() => { isFullscreenRef.current = isFullscreen; }, [isFullscreen]);
 
+    // Carregar letra com fade
     const carregarLetraComFade = async (nomeMusica) => {
         setLoading(true);
-        Animated.timing(fadeAnim, {
-            toValue: 0,
-            duration: 200,
-            useNativeDriver: true,
-        }).start(async () => {
+        Animated.timing(fadeAnim, { toValue: 0, duration: 200, useNativeDriver: true }).start(async () => {
             try {
                 const caminho = FileSystem.documentDirectory + nomeMusica + '.txt';
                 const texto = await FileSystem.readAsStringAsync(caminho);
@@ -62,11 +56,7 @@ export default function SetListLyricsScreen({ route, navigation }) {
                 console.error(error);
             } finally {
                 setLoading(false);
-                Animated.timing(fadeAnim, {
-                    toValue: 1,
-                    duration: 400,
-                    useNativeDriver: true,
-                }).start();
+                Animated.timing(fadeAnim, { toValue: 1, duration: 400, useNativeDriver: true }).start();
             }
         });
     };
@@ -77,38 +67,22 @@ export default function SetListLyricsScreen({ route, navigation }) {
         }
     }, [indice]);
 
-    // PanResponder
+    // PanResponder para swipe
     const panResponder = useRef(
         PanResponder.create({
             onMoveShouldSetPanResponder: (_, gestureState) =>
                 Math.abs(gestureState.dx) > 20 && Math.abs(gestureState.dy) < 50,
             onPanResponderRelease: (_, gestureState) => {
                 const dx = gestureState.dx;
-
-                // Swipe esquerda → próxima música
-                if (dx < -50) {
-                    setIndice((oldIndice) => Math.min(oldIndice + 1, musicas.length - 1));
-                }
-
-                // Swipe direita → anterior ou voltar
+                if (dx < -50) setIndice(old => Math.min(old + 1, musicas.length - 1));
                 else if (dx > 50) {
-                    // Bloqueia voltar se fullscreen + primeira música
                     if (indiceRef.current === 0 && isFullscreenRef.current) {
-                        if (Platform.OS === 'android') {
-                            ToastAndroid.show('Ação bloqueada em tela cheia', ToastAndroid.SHORT);
-                        } else {
-                            Alert.alert('', 'Ação bloqueada em tela cheia');
-                        }
+                        if (Platform.OS === 'android') ToastAndroid.show('Ação bloqueada em tela cheia', ToastAndroid.SHORT);
+                        else Alert.alert('', 'Ação bloqueada em tela cheia');
                         return;
                     }
-
-                    setIndice((oldIndice) => {
-                        if (oldIndice > 0) return Math.max(oldIndice - 1, 0);
-                        else {
-                            navigation.goBack();
-                            return oldIndice;
-                        }
-                    });
+                    setIndice(old => old > 0 ? Math.max(old - 1, 0) : old);
+                    if (indiceRef.current === 0) navigation.goBack();
                 }
             },
         })
@@ -119,12 +93,11 @@ export default function SetListLyricsScreen({ route, navigation }) {
         useCallback(() => {
             const onBackPress = () => {
                 if (indice > 0) {
-                    setIndice((oldIndice) => Math.max(oldIndice - 1, 0));
+                    setIndice(old => Math.max(old - 1, 0));
                     return true;
                 }
                 return false;
             };
-
             const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
             return () => subscription.remove();
         }, [indice])
@@ -137,9 +110,8 @@ export default function SetListLyricsScreen({ route, navigation }) {
                 scrollPosition.current += speed * 1.5;
                 scrollRef.current?.scrollTo({ y: scrollPosition.current, animated: false });
             }, 50);
-        } else {
-            clearInterval(intervalRef.current);
-        }
+        } else clearInterval(intervalRef.current);
+
         return () => clearInterval(intervalRef.current);
     }, [scrolling, speed]);
 
@@ -161,8 +133,6 @@ export default function SetListLyricsScreen({ route, navigation }) {
         navigation.getParent()?.setOptions({
             tabBarStyle: isFullscreen ? { display: 'none' } : { display: 'flex' },
         });
-
-        // Desabilita gesto de navegação enquanto fullscreen
         navigation.setOptions?.({ gestureEnabled: !isFullscreen });
         navigation.getParent?.()?.setOptions?.({ gestureEnabled: !isFullscreen });
     }, [isFullscreen, navigation]);
@@ -179,25 +149,21 @@ export default function SetListLyricsScreen({ route, navigation }) {
                 ref={scrollRef}
                 contentContainerStyle={styles.content}
                 style={{ opacity: fadeAnim }}
-                onScroll={(e) => {
-                    scrollPosition.current = e.nativeEvent.contentOffset.y;
-                }}
+                onScroll={(e) => scrollPosition.current = e.nativeEvent.contentOffset.y}
                 scrollEventThrottle={16}
             >
                 <Text style={styles.title}>{titulo}</Text>
                 {loading ? (
                     <ActivityIndicator size="large" color="#00e676" style={{ marginTop: 20 }} />
                 ) : (
-                    <Text style={[styles.lyrics, { fontSize, lineHeight: fontSize * 1.5 }]}>
-                        {letra}
-                    </Text>
+                    <Text style={[styles.lyrics, { fontSize, lineHeight: fontSize * 1.5 }]}>{letra}</Text>
                 )}
             </Animated.ScrollView>
 
             {/* Controles fixos */}
             <View style={styles.fixedControls}>
                 <View style={styles.row}>
-                    <TouchableOpacity style={{ marginHorizontal: 10 }} onPress={() => setScrolling(prev => !prev)}>
+                    <TouchableOpacity onPress={() => setScrolling(prev => !prev)} style={{ marginHorizontal: 10 }}>
                         <Ionicons name={scrolling ? "pause" : "play"} size={28} color="#00e676" />
                     </TouchableOpacity>
 
@@ -217,20 +183,16 @@ export default function SetListLyricsScreen({ route, navigation }) {
                         <Ionicons name="arrow-up" size={28} color="#00e676" />
                     </TouchableOpacity>
 
-                    <TouchableOpacity style={{ marginHorizontal: 10 }} onPress={decreaseFont}>
+                    <TouchableOpacity onPress={decreaseFont} style={{ marginHorizontal: 10 }}>
                         <Ionicons name="remove-circle-outline" size={28} color="#00e676" />
                     </TouchableOpacity>
 
-                    <TouchableOpacity style={{ marginHorizontal: 10 }} onPress={increaseFont}>
+                    <TouchableOpacity onPress={increaseFont} style={{ marginHorizontal: 10 }}>
                         <Ionicons name="add-circle-outline" size={28} color="#00e676" />
                     </TouchableOpacity>
 
-                    <TouchableOpacity style={{ marginHorizontal: 10 }} onPress={toggleFullscreen}>
-                        <Ionicons
-                            name={isFullscreen ? "contract-outline" : "expand-outline"}
-                            size={28}
-                            color="#00e676"
-                        />
+                    <TouchableOpacity onPress={toggleFullscreen} style={{ marginHorizontal: 10 }}>
+                        <Ionicons name={isFullscreen ? "contract-outline" : "expand-outline"} size={28} color="#00e676" />
                     </TouchableOpacity>
                 </View>
             </View>
@@ -239,25 +201,10 @@ export default function SetListLyricsScreen({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
-    screen: {
-        flex: 1,
-        backgroundColor: '#121212',
-    },
-    content: {
-        padding: 20,
-        paddingBottom: 100,
-    },
-    title: {
-        color: '#00e676',
-        fontSize: 22,
-        fontWeight: 'bold',
-        marginBottom: 20,
-        textAlign: 'center',
-    },
-    lyrics: {
-        color: '#fff',
-        lineHeight: 28,
-    },
+    screen: { flex: 1, backgroundColor: '#121212' },
+    content: { padding: 20, paddingBottom: 100 },
+    title: { color: '#00e676', fontSize: 22, fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
+    lyrics: { color: '#fff', lineHeight: 28 },
     fixedControls: {
         position: 'absolute',
         bottom: 0,
@@ -270,15 +217,6 @@ const styles = StyleSheet.create({
         borderTopWidth: 1,
         borderTopColor: '#333',
     },
-    row: {
-        flexDirection: 'row',
-        justifyContent: 'space-around',
-        alignItems: 'center',
-        marginVertical: 5,
-    },
-    speedLabel: {
-        color: '#00e676',
-        fontSize: 16,
-        marginHorizontal: 5,
-    },
+    row: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', marginVertical: 5 },
+    speedLabel: { color: '#00e676', fontSize: 16, marginHorizontal: 5 },
 });
