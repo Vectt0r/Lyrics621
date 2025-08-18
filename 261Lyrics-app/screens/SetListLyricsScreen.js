@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, {useState, useEffect, useRef, useCallback, useContext} from 'react';
 import {
     View,
     Text,
@@ -15,6 +15,7 @@ import {
     Alert
 } from 'react-native';
 import * as FileSystem from 'expo-file-system';
+import { FontSizeContext } from './FontSizeContext';
 import { useFocusEffect } from '@react-navigation/native';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import * as NavigationBar from 'expo-navigation-bar';
@@ -27,7 +28,7 @@ export default function SetListLyricsScreen({ route, navigation }) {
     const [loading, setLoading] = useState(false);
     const scrollRef = useRef(null);
 
-    const [fontSize, setFontSize] = useState(16);
+    const { fontSize, setFontSize } = useContext(FontSizeContext);
     const [scrolling, setScrolling] = useState(false);
     const [speed, setSpeed] = useState(1);
     const scrollPosition = useRef(0);
