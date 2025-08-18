@@ -1,13 +1,10 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-  <!-- Tema principal da aplicação -->
   <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
     <item name="android:editTextBackground">@drawable/rn_edit_text_material</item>
     <item name="colorPrimary">@color/colorPrimary</item>
     <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
     <item name="android:statusBarColor">#ffffff</item>
   </style>
-
-  <!-- Tema usado na splash screen -->
   <style name="Theme.App.SplashScreen" parent="AppTheme">
     <item name="android:windowBackground">@drawable/splashscreen</item>
   </style>
