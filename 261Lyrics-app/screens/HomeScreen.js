@@ -27,14 +27,36 @@ export default function HomeScreen({ navigation }) {
         }
 
         setLoading(true); // começa carregamento
+        const url = `https://lrclib.net/api/search?q=${encodeURIComponent(query)}`;
+        const tentativas = 3;
         try {
-            const response = await axios.get(
-                `https://lrclib.net/api/search?q=${encodeURIComponent(query)}`
-            );
-            setLetras(response.data);
+            for (let i = 1; i <= tentativas; i++) {
+                try {
+                    const response = await axios.get(url, {
+                        timeout: 15000,
+                        // O User-Agent padrão do Android (okhttp) é bloqueado pela lrclib (520)
+                        headers: {
+                            'User-Agent': '261Lyrics-app v1.0.0',
+                            'Lrclib-Client': '261Lyrics-app v1.0.0',
+                        },
+                    });
+                    setLetras(response.data);
+                    return;
+                } catch (error) {
+                    const status = error.response?.status;
+                    // 5xx (ex: 503, 520) e falhas de rede são temporários: tenta de novo
+                    const temporario = !status || status >= 500;
+                    if (!temporario || i === tentativas) throw error;
+                    await new Promise(r => setTimeout(r, 1000 * i));
+                }
+            }
         } catch (error) {
             console.error('Erro ao buscar letras:', error.message);
             setLetras([]);
+            Alert.alert(
+                'Erro',
+                'O servidor de letras está instável no momento. Tente novamente em instantes.'
+            );
         } finally {
             setLoading(false); // termina carregamento
         }
