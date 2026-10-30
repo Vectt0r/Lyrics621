@@ -21,7 +21,8 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.vecttor.x261Lyricsapp"
+      "package": "com.vecttor.x261Lyricsapp",
+      "allowBackup": false
     },
     "web": {
       "favicon": "./assets/favicon.png"

@@ -4,7 +4,11 @@
     <item name="android:editTextBackground">@drawable/rn_edit_text_material</item>
     <item name="colorPrimary">@color/colorPrimary</item>
     <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-    <item name="android:statusBarColor">#ffffff</item>
+    <item name="android:statusBarColor">#121212</item>
+    <!-- Fundo escuro da janela nativa: sem isso, o Android usa o branco
+         padrão do tema Light, que "vaza" durante as transições entre telas
+         (principalmente ao voltar). -->
+    <item name="android:windowBackground">#121212</item>
   </style>
 
   <!-- Tema usado na splash screen -->

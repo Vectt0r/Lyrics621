@@ -18,6 +18,7 @@
     "@react-navigation/stack": "^7.4.5",
     "axios": "^1.11.0",
     "expo": "~53.0.20",
+    "expo-document-picker": "~13.1.6",
     "expo-file-system": "^18.1.11",
     "expo-navigation-bar": "^4.2.7",
     "expo-screen-orientation": "^8.1.7",
@@ -27,9 +28,9 @@
     "react-native-draggable-flatlist": "^4.0.3",
     "react-native-gesture-handler": "^2.28.0",
     "react-native-navigation-bar-color": "^2.0.2",
-    "react-native-swipe-gestures": "^1.0.5",
     "react-native-safe-area-context": "5.4.0",
-    "react-native-screens": "~4.11.1"
+    "react-native-screens": "~4.11.1",
+    "react-native-swipe-gestures": "^1.0.5"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

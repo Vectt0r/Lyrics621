@@ -9,6 +9,7 @@ import * as FileSystem from 'expo-file-system';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import * as NavigationBar from 'expo-navigation-bar';
 import { useNavigation } from '@react-navigation/native';
+import { tabBarStyle, colors, spacing } from '../theme';
 
 export default function LyricsScreen({ route }) {
     const { letra, nomeArquivo } = route.params;
@@ -63,7 +64,7 @@ export default function LyricsScreen({ route }) {
         navigation.getParent()?.setOptions({
             tabBarStyle: isFullscreen
                 ? { display: 'none' }
-                : {  display: 'flex' },
+                : { ...tabBarStyle, display: 'flex' },
         });
     }, [isFullscreen, navigation]);
 
@@ -91,14 +92,14 @@ export default function LyricsScreen({ route }) {
         <SafeAreaView style={styles.screen}>
             <ScrollView
                 ref={scrollRef}
-                contentContainerStyle={styles.content}
+                contentContainerStyle={[styles.content, isFullscreen && styles.contentFullscreen]}
                 onScroll={(e) => {
                     scrollPosition.current = e.nativeEvent.contentOffset.y;
                 }}
                 scrollEventThrottle={16}
             >
                 <Text style={styles.title}>{titulo}</Text>
-                <Text style={[styles.lyrics, { fontSize }]}>
+                <Text style={[styles.lyrics, { fontSize }, isFullscreen && styles.lyricsFullscreen]}>
                     {textoLetra}
                 </Text>
             </ScrollView>
@@ -107,13 +108,13 @@ export default function LyricsScreen({ route }) {
             <View style={styles.fixedControls}>
                 <View style={styles.row}>
                     <TouchableOpacity style={{ marginHorizontal: 10 }} onPress={() => setScrolling(prev => !prev)}>
-                        <Ionicons name={scrolling ? "pause" : "play"} size={28} color="#00e676" />
+                        <Ionicons name={scrolling ? "pause" : "play"} size={28} color={colors.primary} />
                     </TouchableOpacity>
 
                     <TouchableOpacity style={{ marginHorizontal: 10 }} onPress={() =>
                         setSpeed(prev => Math.max(Math.round((prev - 0.1) * 10) / 10, 0.1))
                     }>
-                        <Ionicons name="arrow-down" size={28} color="#00e676" />
+                        <Ionicons name="arrow-down" size={28} color={colors.primary} />
                     </TouchableOpacity>
 
                     <Text style={[styles.speedLabel, { marginHorizontal: 10 }]}>
@@ -123,22 +124,22 @@ export default function LyricsScreen({ route }) {
                     <TouchableOpacity style={{ marginHorizontal: 10 }} onPress={() =>
                         setSpeed(prev => Math.min(Math.round((prev + 0.1) * 10) / 10, 5.0))
                     }>
-                        <Ionicons name="arrow-up" size={28} color="#00e676" />
+                        <Ionicons name="arrow-up" size={28} color={colors.primary} />
                     </TouchableOpacity>
 
                     <TouchableOpacity style={{ marginHorizontal: 10 }} onPress={decreaseFont}>
-                        <Ionicons name="remove-circle-outline" size={28} color="#00e676" />
+                        <Ionicons name="remove-circle-outline" size={28} color={colors.primary} />
                     </TouchableOpacity>
 
                     <TouchableOpacity style={{ marginHorizontal: 10 }} onPress={increaseFont}>
-                        <Ionicons name="add-circle-outline" size={28} color="#00e676" />
+                        <Ionicons name="add-circle-outline" size={28} color={colors.primary} />
                     </TouchableOpacity>
 
                     <TouchableOpacity style={{ marginHorizontal: 10 }} onPress={toggleFullscreen}>
                         <Ionicons
                             name={isFullscreen ? "contract-outline" : "expand-outline"}
                             size={28}
-                            color="#00e676"
+                            color={colors.primary}
                         />
                     </TouchableOpacity>
                 </View>
@@ -150,22 +151,31 @@ export default function LyricsScreen({ route }) {
 const styles = StyleSheet.create({
     screen: {
         flex: 1,
-        backgroundColor: '#121212',
+        backgroundColor: colors.background,
     },
     content: {
         padding: 20,
         paddingBottom: 100,
     },
+    contentFullscreen: {
+        flexGrow: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
     title: {
-        color: '#00e676',
+        color: colors.primary,
         fontSize: 22,
         fontWeight: 'bold',
+        marginTop: spacing.xxl,
         marginBottom: 20,
         textAlign: 'center',
     },
     lyrics: {
-        color: '#fff',
+        color: colors.text,
         lineHeight: 28,
+    },
+    lyricsFullscreen: {
+        textAlign: 'center',
     },
     fixedControls: {
         position: 'absolute',
@@ -175,9 +185,9 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-around',
         paddingVertical: 10,
-        backgroundColor: '#1f1f1f',
+        backgroundColor: colors.surface,
         borderTopWidth: 1,
-        borderTopColor: '#333',
+        borderTopColor: colors.border,
     },
     row: {
         flexDirection: 'row',
@@ -186,7 +196,7 @@ const styles = StyleSheet.create({
         marginVertical: 5,
     },
     speedLabel: {
-        color: '#00e676',
+        color: colors.primary,
         fontSize: 16,
         marginHorizontal: 5,
     },

@@ -12,15 +12,17 @@ import {
     Animated,
     Platform,
     ToastAndroid,
-    Alert
 } from 'react-native';
 import * as FileSystem from 'expo-file-system';
 import { useFocusEffect } from '@react-navigation/native';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import * as NavigationBar from 'expo-navigation-bar';
 import { Ionicons } from '@expo/vector-icons';
+import { tabBarStyle, colors, spacing, radius } from '../theme';
+import { useAppAlert } from '../components/AppAlert';
 
 export default function SetListLyricsScreen({ route, navigation }) {
+    const showAlert = useAppAlert();
     const { musicas, indexAtual } = route.params;
     const [indice, setIndice] = useState(indexAtual);
     const [letra, setLetra] = useState('');
@@ -96,7 +98,7 @@ export default function SetListLyricsScreen({ route, navigation }) {
                         if (Platform.OS === 'android') {
                             ToastAndroid.show('Ação bloqueada em tela cheia', ToastAndroid.SHORT);
                         } else {
-                            Alert.alert('', 'Ação bloqueada em tela cheia');
+                            showAlert('Atenção', 'Ação bloqueada em tela cheia.');
                         }
                         return;
                     }
@@ -158,7 +160,7 @@ export default function SetListLyricsScreen({ route, navigation }) {
 
     useEffect(() => {
         navigation.getParent()?.setOptions({
-            tabBarStyle: isFullscreen ? { display: 'none' } : { display: 'flex' },
+            tabBarStyle: isFullscreen ? { display: 'none' } : { ...tabBarStyle, display: 'flex' },
         });
 
         // Desabilita gesto de navegação enquanto fullscreen
@@ -170,13 +172,23 @@ export default function SetListLyricsScreen({ route, navigation }) {
     const increaseFont = () => setFontSize(prev => Math.min(prev + 2, 40));
     const decreaseFont = () => setFontSize(prev => Math.max(prev - 2, 12));
 
+    // Navegação entre músicas (botões da barra, visíveis só em fullscreen)
+    const temAnterior = indice > 0;
+    const temProxima = indice < musicas.length - 1;
+    const irParaAnterior = () => {
+        if (temAnterior) setIndice(prev => Math.max(prev - 1, 0));
+    };
+    const irParaProxima = () => {
+        if (temProxima) setIndice(prev => Math.min(prev + 1, musicas.length - 1));
+    };
+
     const titulo = musicas[indice]?.name || 'Sem música';
 
     return (
         <SafeAreaView style={styles.screen} {...panResponder.panHandlers}>
             <Animated.ScrollView
                 ref={scrollRef}
-                contentContainerStyle={styles.content}
+                contentContainerStyle={[styles.content, isFullscreen && styles.contentFullscreen]}
                 style={{ opacity: fadeAnim }}
                 onScroll={(e) => {
                     scrollPosition.current = e.nativeEvent.contentOffset.y;
@@ -185,52 +197,73 @@ export default function SetListLyricsScreen({ route, navigation }) {
             >
                 <Text style={styles.title}>{titulo}</Text>
                 {loading ? (
-                    <ActivityIndicator size="large" color="#00e676" style={{ marginTop: 20 }} />
+                    <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 20 }} />
                 ) : (
-                    <Text style={[styles.lyrics, { fontSize, lineHeight: fontSize * 1.5 }]}>
+                    <Text style={[styles.lyrics, { fontSize, lineHeight: fontSize * 1.5 }, isFullscreen && styles.lyricsFullscreen]}>
                         {letra}
                     </Text>
                 )}
             </Animated.ScrollView>
 
             {/* Controles fixos */}
-            <View style={styles.fixedControls}>
-                <View style={styles.row}>
-                    <TouchableOpacity style={{ marginHorizontal: 10 }} onPress={() => setScrolling(prev => !prev)}>
-                        <Ionicons name={scrolling ? "pause" : "play"} size={28} color="#00e676" />
+            <View style={styles.bottomWrapper}>
+                {/* Barra estreita de navegação entre músicas, acima da barra de ações */}
+                <View style={styles.navBar}>
+                    <TouchableOpacity
+                        style={{ marginHorizontal: 16, opacity: temAnterior ? 1 : 0.3 }}
+                        onPress={irParaAnterior}
+                        disabled={!temAnterior}
+                    >
+                        <Ionicons name="play-skip-back" size={24} color={colors.primary} />
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                        style={{ marginHorizontal: 10 }}
-                        onPress={() => setSpeed(prev => Math.max(Math.round((prev - 0.1) * 10) / 10, 0.1))}
+                        style={{ marginHorizontal: 16, opacity: temProxima ? 1 : 0.3 }}
+                        onPress={irParaProxima}
+                        disabled={!temProxima}
                     >
-                        <Ionicons name="arrow-down" size={28} color="#00e676" />
+                        <Ionicons name="play-skip-forward" size={24} color={colors.primary} />
                     </TouchableOpacity>
+                </View>
 
-                    <Text style={[styles.speedLabel, { marginHorizontal: 10 }]}>Vel {speed.toFixed(1)}x</Text>
+                <View style={styles.fixedControls}>
+                    <View style={styles.row}>
+                        <TouchableOpacity style={{ marginHorizontal: 10 }} onPress={() => setScrolling(prev => !prev)}>
+                            <Ionicons name={scrolling ? "pause" : "play"} size={28} color={colors.primary} />
+                        </TouchableOpacity>
 
-                    <TouchableOpacity
-                        style={{ marginHorizontal: 10 }}
-                        onPress={() => setSpeed(prev => Math.min(Math.round((prev + 0.1) * 10) / 10, 5.0))}
-                    >
-                        <Ionicons name="arrow-up" size={28} color="#00e676" />
-                    </TouchableOpacity>
+                        <TouchableOpacity
+                            style={{ marginHorizontal: 10 }}
+                            onPress={() => setSpeed(prev => Math.max(Math.round((prev - 0.1) * 10) / 10, 0.1))}
+                        >
+                            <Ionicons name="arrow-down" size={28} color={colors.primary} />
+                        </TouchableOpacity>
 
-                    <TouchableOpacity style={{ marginHorizontal: 10 }} onPress={decreaseFont}>
-                        <Ionicons name="remove-circle-outline" size={28} color="#00e676" />
-                    </TouchableOpacity>
+                        <Text style={[styles.speedLabel, { marginHorizontal: 10 }]}>Vel {speed.toFixed(1)}x</Text>
 
-                    <TouchableOpacity style={{ marginHorizontal: 10 }} onPress={increaseFont}>
-                        <Ionicons name="add-circle-outline" size={28} color="#00e676" />
-                    </TouchableOpacity>
+                        <TouchableOpacity
+                            style={{ marginHorizontal: 10 }}
+                            onPress={() => setSpeed(prev => Math.min(Math.round((prev + 0.1) * 10) / 10, 5.0))}
+                        >
+                            <Ionicons name="arrow-up" size={28} color={colors.primary} />
+                        </TouchableOpacity>
 
-                    <TouchableOpacity style={{ marginHorizontal: 10 }} onPress={toggleFullscreen}>
-                        <Ionicons
-                            name={isFullscreen ? "contract-outline" : "expand-outline"}
-                            size={28}
-                            color="#00e676"
-                        />
-                    </TouchableOpacity>
+                        <TouchableOpacity style={{ marginHorizontal: 10 }} onPress={decreaseFont}>
+                            <Ionicons name="remove-circle-outline" size={28} color={colors.primary} />
+                        </TouchableOpacity>
+
+                        <TouchableOpacity style={{ marginHorizontal: 10 }} onPress={increaseFont}>
+                            <Ionicons name="add-circle-outline" size={28} color={colors.primary} />
+                        </TouchableOpacity>
+
+                        <TouchableOpacity style={{ marginHorizontal: 10 }} onPress={toggleFullscreen}>
+                            <Ionicons
+                                name={isFullscreen ? "contract-outline" : "expand-outline"}
+                                size={28}
+                                color={colors.primary}
+                            />
+                        </TouchableOpacity>
+                    </View>
                 </View>
             </View>
         </SafeAreaView>
@@ -240,34 +273,60 @@ export default function SetListLyricsScreen({ route, navigation }) {
 const styles = StyleSheet.create({
     screen: {
         flex: 1,
-        backgroundColor: '#121212',
+        backgroundColor: colors.background,
     },
     content: {
         padding: 20,
         paddingBottom: 100,
     },
+    contentFullscreen: {
+        flexGrow: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
     title: {
-        color: '#00e676',
+        color: colors.primary,
         fontSize: 22,
         fontWeight: 'bold',
+        marginTop: spacing.xxl,
         marginBottom: 20,
         textAlign: 'center',
     },
     lyrics: {
-        color: '#fff',
+        color: colors.text,
         lineHeight: 28,
     },
-    fixedControls: {
+    lyricsFullscreen: {
+        textAlign: 'center',
+    },
+    bottomWrapper: {
         position: 'absolute',
         bottom: 0,
         left: 0,
         right: 0,
+    },
+    navBar: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        alignSelf: 'center',
+        width: '55%',
+        paddingVertical: 8,
+        backgroundColor: colors.surface,
+        borderTopWidth: 1,
+        borderLeftWidth: 1,
+        borderRightWidth: 1,
+        borderColor: colors.border,
+        borderTopLeftRadius: radius.md,
+        borderTopRightRadius: radius.md,
+    },
+    fixedControls: {
         flexDirection: 'row',
         justifyContent: 'space-around',
         paddingVertical: 10,
-        backgroundColor: '#1f1f1f',
+        backgroundColor: colors.surface,
         borderTopWidth: 1,
-        borderTopColor: '#333',
+        borderTopColor: colors.border,
     },
     row: {
         flexDirection: 'row',
@@ -276,7 +335,7 @@ const styles = StyleSheet.create({
         marginVertical: 5,
     },
     speedLabel: {
-        color: '#00e676',
+        color: colors.primary,
         fontSize: 16,
         marginHorizontal: 5,
     },

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
     View,
     Text,
@@ -7,13 +7,19 @@ import {
     Modal,
     ScrollView,
     StyleSheet,
-    Alert,
+    SafeAreaView,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as FileSystem from 'expo-file-system';
 import {MaterialIcons} from "@expo/vector-icons";
+import { useFocusEffect } from '@react-navigation/native';
+import { colors, radius, spacing } from '../theme';
+import { useAppAlert } from '../components/AppAlert';
+
+const formatMusicCount = (n) => `${n} música${n === 1 ? '' : 's'}`;
 
 export default function SetListMusicas({ route, navigation }) {
+    const showAlert = useAppAlert();
     const { setList } = route.params;
 
     const [modalVisible, setModalVisible] = useState(false);
@@ -39,17 +45,20 @@ export default function SetListMusicas({ route, navigation }) {
         }
     };
 
-    useEffect(() => {
-        carregarSetLists();
-    }, []);
+    useFocusEffect(
+        useCallback(() => {
+            carregarSetLists();
+        }, [])
+    );
 
-    // Carrega arquivos .txt da pasta do app
+    // Carrega arquivos .txt da pasta do app, exceto as que já estão neste SetList
     const carregarMusicasSalvas = async () => {
         try {
             const lista = await FileSystem.readDirectoryAsync(FileSystem.documentDirectory);
             const arquivosTxt = lista.filter(nome => nome.endsWith('.txt'));
             const nomesSemExt = arquivosTxt.map(nome => nome.replace('.txt', ''));
-            setMusicasSalvas(nomesSemExt);
+            const jaNoSetList = new Set(musicas.map(m => m.name));
+            setMusicasSalvas(nomesSemExt.filter(nome => !jaNoSetList.has(nome)));
             setSelecionadas([]);
             setBuscaMusica('');
         } catch (e) {
@@ -91,7 +100,7 @@ export default function SetListMusicas({ route, navigation }) {
 
     const handleSalvarSelecionadas = () => {
         if (selecionadas.length === 0) {
-            Alert.alert('Nenhuma música selecionada');
+            showAlert('Atenção', 'Selecione ao menos uma música para adicionar.');
             return;
         }
 
@@ -107,9 +116,9 @@ export default function SetListMusicas({ route, navigation }) {
     };
 
     const handleDeleteMusica = (index) => {
-        Alert.alert(
+        showAlert(
             'Excluir música',
-            'Deseja excluir essa música?',
+            `Tem certeza que deseja excluir "${musicas[index]?.name}" deste SetList?`,
             [
                 { text: 'Cancelar', style: 'cancel' },
                 {
@@ -167,63 +176,80 @@ export default function SetListMusicas({ route, navigation }) {
     );
 
     return (
-        <View style={styles.container}>
-            <Text style={styles.titulo}>SetList - {setList.name}</Text>
+        <SafeAreaView style={styles.container}>
+            <View style={styles.tituloRow}>
+                <Text style={styles.titulo} numberOfLines={1}>{setList.name}</Text>
+                <Text style={styles.tituloMusicCount}>{formatMusicCount(musicas.length)}</Text>
+            </View>
 
             <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
-                {musicas.map((item, index) => {
-                    const selecionado = index === indiceSelecionado;
-                    return (
-                        <View
-                            key={index}
-                            style={[
-                                styles.resultItem,
-                                selecionado && { backgroundColor: '#1DB954' },
-                            ]}
-                        >
-                            <TouchableOpacity
-                                onPress={() => onPressMusica(index)}
-                                onLongPress={() => onLongPressMusica(index)}
-                                delayLongPress={250}
-                                style={{ flex: 1 }}
+                {musicas.length === 0 ? (
+                    <View style={styles.emptyState}>
+                        <MaterialIcons name="queue-music" size={40} color={colors.placeholder} />
+                        <Text style={styles.semResultados}>Nenhuma música nesse SetList ainda.</Text>
+                    </View>
+                ) : (
+                    musicas.map((item, index) => {
+                        const selecionado = index === indiceSelecionado;
+                        return (
+                            <View
+                                key={index}
+                                style={[
+                                    styles.resultItem,
+                                    selecionado && { backgroundColor: colors.primary },
+                                ]}
                             >
-                                <Text style={styles.songTitle}>{item.name}</Text>
-                            </TouchableOpacity>
+                                <TouchableOpacity
+                                    onPress={() => onPressMusica(index)}
+                                    onLongPress={() => onLongPressMusica(index)}
+                                    delayLongPress={250}
+                                    style={{ flex: 1 }}
+                                >
+                                    <Text style={styles.songTitle}>{item.name}</Text>
+                                </TouchableOpacity>
 
-                            <TouchableOpacity
-                                style={styles.deleteButton}
-                                onPress={() => handleDeleteMusica(index)}
-                            >
-                                <MaterialIcons name="delete" size={28} color="#dc3545" />
-                            </TouchableOpacity>
-                        </View>
-                    );
-                })}
+                                <TouchableOpacity
+                                    style={styles.deleteButton}
+                                    onPress={() => handleDeleteMusica(index)}
+                                >
+                                    <MaterialIcons name="delete-outline" size={24} color={colors.danger} />
+                                </TouchableOpacity>
+                            </View>
+                        );
+                    })
+                )}
             </ScrollView>
 
-            <TouchableOpacity style={styles.addButton} onPress={abrirModal}>
+            <TouchableOpacity style={styles.addButton} activeOpacity={0.85} onPress={abrirModal}>
+                <MaterialIcons name="add" size={20} color={colors.background} />
                 <Text style={styles.addButtonText}>Adicionar Música</Text>
             </TouchableOpacity>
 
             <Modal
                 visible={modalVisible}
-                animationType="slide"
+                animationType="fade"
                 transparent
                 onRequestClose={() => setModalVisible(false)}
             >
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalContent}>
-                        <Text style={styles.modalTitle}>Selecione as Músicas</Text>
-                        <TextInput
-                            style={styles.buscaInput}
-                            placeholder="Buscar música"
-                            placeholderTextColor="#aaa"
-                            value={buscaMusica}
-                            onChangeText={setBuscaMusica}
-                        />
+                        <View style={styles.modalHeader}>
+                            <MaterialIcons name="library-music" size={22} color={colors.primary} />
+                            <Text style={styles.modalTitle}>Selecione as Músicas</Text>
+                        </View>
+                        <View style={styles.buscaWrapper}>
+                            <MaterialIcons name="search" size={20} color={colors.placeholder} style={styles.buscaIcon} />
+                            <TextInput
+                                style={styles.buscaInput}
+                                placeholder="Buscar música"
+                                placeholderTextColor={colors.placeholder}
+                                value={buscaMusica}
+                                onChangeText={setBuscaMusica}
+                            />
+                        </View>
                         <ScrollView style={{ maxHeight: 300 }} keyboardShouldPersistTaps="handled">
                             {musicasSalvasFiltradas.length === 0 ? (
-                                <Text style={{ color: '#fff', textAlign: 'center', marginTop: 20 }}>
+                                <Text style={styles.semResultadosModal}>
                                     {musicasSalvas.length === 0
                                         ? 'Nenhuma música salva encontrada.'
                                         : 'Nenhuma música encontrada para essa busca.'}
@@ -236,13 +262,18 @@ export default function SetListMusicas({ route, navigation }) {
                                             key={i}
                                             onPress={() => toggleSelecionada(nome)}
                                             style={styles.checkboxContainer}
+                                            activeOpacity={0.7}
                                         >
                                             <View
                                                 style={[
                                                     styles.checkbox,
-                                                    { backgroundColor: isChecked ? '#1DB954' : '#333' },
+                                                    isChecked && styles.checkboxChecked,
                                                 ]}
-                                            />
+                                            >
+                                                {isChecked && (
+                                                    <MaterialIcons name="check" size={16} color={colors.background} />
+                                                )}
+                                            </View>
                                             <Text style={styles.checkboxLabel}>{nome}</Text>
                                         </TouchableOpacity>
                                     );
@@ -252,98 +283,135 @@ export default function SetListMusicas({ route, navigation }) {
                         <View style={styles.modalButtons}>
                             <TouchableOpacity
                                 style={styles.cancelButton}
+                                activeOpacity={0.8}
                                 onPress={() => setModalVisible(false)}
                             >
                                 <Text style={styles.buttonText}>Cancelar</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={styles.saveButton}
+                                activeOpacity={0.8}
                                 onPress={handleSalvarSelecionadas}
                             >
-                                <Text style={styles.buttonText}>Salvar</Text>
+                                <Text style={styles.saveButtonText}>Salvar</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
                 </View>
             </Modal>
-        </View>
+        </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#121212', padding: 20 },
-    titulo: { fontSize: 25, color: '#fff', marginTop: 60, marginBottom: 5, fontWeight: 'bold' },
+    container: { flex: 1, backgroundColor: colors.background, padding: spacing.md },
+    tituloRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginTop: spacing.xxl,
+        marginBottom: spacing.sm,
+    },
+    titulo: { fontSize: 25, color: colors.text, fontWeight: 'bold', flexShrink: 1 },
+    tituloMusicCount: { color: colors.placeholder, fontSize: 14, marginLeft: spacing.sm },
+    emptyState: { alignItems: 'center', marginTop: spacing.xl },
+    semResultados: { color: colors.placeholder, textAlign: 'center', marginTop: spacing.sm },
     resultItem: {
-        backgroundColor: '#1e1e1e',
-        padding: 12,
-        borderRadius: 8,
-        marginBottom: 10,
+        backgroundColor: colors.surface,
+        padding: spacing.md,
+        borderRadius: radius.md,
+        marginBottom: spacing.sm,
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
     },
-    songTitle: { color: '#fff', fontSize: 16 },
-    deleteBtn: {
-        backgroundColor: '#dc3545',
-        paddingVertical: 6,
-        paddingHorizontal: 12,
-        borderRadius: 6,
-    },
-    actionText: { color: '#fff', fontWeight: 'bold' },
+    songTitle: { color: colors.text, fontSize: 16 },
+    actionText: { color: colors.text, fontWeight: 'bold' },
     addButton: {
-        backgroundColor: '#1DB954',
+        backgroundColor: colors.primary,
         padding: 15,
-        borderRadius: 8,
+        borderRadius: radius.pill,
+        flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'center',
+        gap: 6,
         position: 'absolute',
         bottom: 20,
         left: 20,
         right: 20,
         elevation: 5,
+        shadowColor: '#000',
+        shadowOpacity: 0.3,
+        shadowRadius: 6,
+        shadowOffset: { width: 0, height: 3 },
     },
-    addButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+    addButtonText: { color: colors.background, fontSize: 16, fontWeight: 'bold' },
     modalOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.6)',
+        backgroundColor: colors.overlay,
         justifyContent: 'center',
         alignItems: 'center',
     },
     modalContent: {
-        backgroundColor: '#222',
-        padding: 20,
-        borderRadius: 10,
+        backgroundColor: colors.surfaceAlt,
+        padding: spacing.lg,
+        borderRadius: radius.lg,
         width: '90%',
+        elevation: 8,
+        shadowColor: '#000',
+        shadowOpacity: 0.4,
+        shadowRadius: 12,
+        shadowOffset: { width: 0, height: 6 },
     },
-    modalTitle: { color: '#fff', fontSize: 18, fontWeight: 'bold', marginBottom: 15, textAlign: 'center' },
+    modalHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        marginBottom: spacing.md,
+    },
+    modalTitle: { color: colors.text, fontSize: 18, fontWeight: 'bold' },
+    buscaWrapper: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: colors.surface,
+        borderRadius: radius.sm,
+        paddingHorizontal: spacing.md,
+        marginBottom: spacing.md,
+    },
+    buscaIcon: { marginRight: spacing.sm },
     buscaInput: {
-        backgroundColor: '#333',
-        color: '#fff',
-        borderRadius: 6,
-        paddingHorizontal: 10,
-        paddingVertical: 8,
-        marginBottom: 12,
+        flex: 1,
+        color: colors.text,
+        paddingVertical: 10,
     },
+    semResultadosModal: { color: colors.placeholder, textAlign: 'center', marginTop: 20 },
     checkboxContainer: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8 },
     checkbox: {
-        width: 20,
-        height: 20,
-        borderRadius: 4,
+        width: 22,
+        height: 22,
+        borderRadius: radius.sm / 2,
         marginRight: 12,
-        borderWidth: 1,
-        borderColor: '#1DB954',
+        borderWidth: 1.5,
+        borderColor: colors.primary,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
-    checkboxLabel: { color: '#fff', fontSize: 16 },
+    checkboxChecked: {
+        backgroundColor: colors.primary,
+    },
+    checkboxLabel: { color: colors.text, fontSize: 16 },
     modalButtons: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 15 },
     cancelButton: {
-        backgroundColor: '#555',
-        padding: 10,
-        borderRadius: 6,
+        backgroundColor: colors.surface,
+        padding: 12,
+        borderRadius: radius.sm,
         flex: 1,
         marginRight: 10,
     },
     deleteButton: {
         paddingHorizontal: 10,
     },
-    saveButton: { backgroundColor: '#1DB954', padding: 10, borderRadius: 6, flex: 1 },
-    buttonText: { color: '#fff', fontWeight: 'bold', textAlign: 'center' },
+    saveButton: { backgroundColor: colors.primary, padding: 12, borderRadius: radius.sm, flex: 1 },
+    buttonText: { color: colors.text, fontWeight: 'bold', textAlign: 'center' },
+    saveButtonText: { color: colors.background, fontWeight: 'bold', textAlign: 'center' },
 });
