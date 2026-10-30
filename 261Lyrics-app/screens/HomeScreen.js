@@ -62,8 +62,10 @@ export default function HomeScreen({ navigation }) {
         }
     };
 
+    const sanitizeNomeArquivo = (texto) => (texto || '').replace(/[\\/:*?"<>|]/g, '-').trim();
+
     const baixarLetra = async (item) => {
-        const nomeArquivo = `${item.artistName} - ${item.trackName}.txt`;
+        const nomeArquivo = `${sanitizeNomeArquivo(item.artistName)} - ${sanitizeNomeArquivo(item.trackName)}.txt`;
         const caminho = FileSystem.documentDirectory + nomeArquivo;
         try {
             await FileSystem.writeAsStringAsync(

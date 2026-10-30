@@ -1,11 +1,12 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native';
 import * as FileSystem from 'expo-file-system';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
 
 export default function MusicScreen() {
     const [arquivos, setArquivos] = useState([]);
+    const [busca, setBusca] = useState('');
     const navigation = useNavigation();
 
     const carregarArquivos = async () => {
@@ -51,20 +52,39 @@ export default function MusicScreen() {
         }
     };
 
+    const arquivosFiltrados = arquivos.filter(nome =>
+        nome.toLowerCase().includes(busca.trim().toLowerCase())
+    );
+
     return (
         <View style={styles.container}>
             <Text style={styles.titulo}>Músicas Salvas</Text>
-            <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
-                {arquivos.map((nome, index) => (
-                    <View key={index} style={styles.itemRow}>
-                        <TouchableOpacity style={styles.item} onPress={() => abrirLetra(nome)}>
-                            <Text style={styles.nomeMusica}>{nome.replace('.txt', '')}</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={() => confirmarExcluir(nome)} style={styles.deleteButton}>
-                            <MaterialIcons name="delete" size={28} color="#dc3545" />
-                        </TouchableOpacity>
-                    </View>
-                ))}
+            <TextInput
+                style={styles.busca}
+                placeholder="Buscar música salva"
+                placeholderTextColor="#aaa"
+                value={busca}
+                onChangeText={setBusca}
+            />
+            <ScrollView contentContainerStyle={{ paddingBottom: 20 }} keyboardShouldPersistTaps="handled">
+                {arquivosFiltrados.length === 0 ? (
+                    <Text style={styles.semResultados}>
+                        {arquivos.length === 0
+                            ? 'Nenhuma música salva ainda.'
+                            : 'Nenhuma música encontrada para essa busca.'}
+                    </Text>
+                ) : (
+                    arquivosFiltrados.map((nome, index) => (
+                        <View key={index} style={styles.itemRow}>
+                            <TouchableOpacity style={styles.item} onPress={() => abrirLetra(nome)}>
+                                <Text style={styles.nomeMusica}>{nome.replace('.txt', '')}</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={() => confirmarExcluir(nome)} style={styles.deleteButton}>
+                                <MaterialIcons name="delete" size={28} color="#dc3545" />
+                            </TouchableOpacity>
+                        </View>
+                    ))
+                )}
             </ScrollView>
         </View>
     );
@@ -83,6 +103,13 @@ const styles = StyleSheet.create({
         marginBottom: 20,
         fontWeight: 'bold',
     },
+    busca: {
+        backgroundColor: '#1e1e1e',
+        color: '#fff',
+        padding: 12,
+        borderRadius: 5,
+        marginBottom: 15,
+    },
     itemRow: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -96,6 +123,11 @@ const styles = StyleSheet.create({
     nomeMusica: {
         color: '#fff',
         fontSize: 16,
+    },
+    semResultados: {
+        color: '#aaa',
+        textAlign: 'center',
+        marginTop: 20,
     },
     deleteButton: {
         paddingHorizontal: 10,
