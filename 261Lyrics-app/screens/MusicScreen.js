@@ -20,6 +20,9 @@ export default function MusicScreen() {
     const [backupsDisponiveis, setBackupsDisponiveis] = useState([]);
     const [modalNomeBackupVisible, setModalNomeBackupVisible] = useState(false);
     const [nomeBackupInput, setNomeBackupInput] = useState('');
+    const [modalImportarVisible, setModalImportarVisible] = useState(false);
+    const [tituloImportado, setTituloImportado] = useState('');
+    const [arquivoImportadoUri, setArquivoImportadoUri] = useState(null);
     const navigation = useNavigation();
 
     useEffect(() => {
@@ -88,6 +91,63 @@ export default function MusicScreen() {
     const arquivosFiltrados = arquivos.filter(nome =>
         nome.toLowerCase().includes(busca.trim().toLowerCase())
     );
+
+    // Abre o seletor de arquivos pra importar uma letra de um .txt já
+    // existente no aparelho (ex: recebido por WhatsApp ou baixado manualmente).
+    const escolherArquivoImportar = async () => {
+        let resultado;
+        try {
+            resultado = await DocumentPicker.getDocumentAsync({
+                type: ['text/plain', '*/*'],
+                copyToCacheDirectory: true,
+            });
+        } catch (err) {
+            console.error('Erro ao selecionar arquivo:', err);
+            return;
+        }
+        if (resultado.canceled || !resultado.assets?.length) return;
+
+        const arquivo = resultado.assets[0];
+        setArquivoImportadoUri(arquivo.uri);
+        // Sugere o título a partir do nome do arquivo escolhido, sem a extensão.
+        setTituloImportado((arquivo.name || '').replace(/\.[^/.]+$/, ''));
+        setModalImportarVisible(true);
+    };
+
+    // Salva o conteúdo do arquivo escolhido como uma nova música, usando o
+    // título que o usuário confirmar (ou editar) na modal.
+    const confirmarImportacao = async () => {
+        const titulo = sanitizeNomeBackup(tituloImportado);
+        if (!titulo) {
+            showAlert('Atenção', 'Digite um título para a música.');
+            return;
+        }
+
+        const nomeArquivo = `${titulo}.txt`;
+        const caminho = FileSystem.documentDirectory + nomeArquivo;
+
+        try {
+            const info = await FileSystem.getInfoAsync(caminho);
+            if (info.exists) {
+                showAlert('Música já existe', `Já existe uma música salva com o título "${titulo}". Escolha outro título.`);
+                return;
+            }
+
+            setModalImportarVisible(false);
+            setProcessando(true);
+            const conteudo = await FileSystem.readAsStringAsync(arquivoImportadoUri);
+            await FileSystem.writeAsStringAsync(caminho, conteudo);
+            await carregarArquivos();
+            showAlert('Música importada', `"${titulo}" foi salva com sucesso.`);
+        } catch (err) {
+            console.error('Erro ao importar música:', err);
+            showAlert('Erro', 'Não foi possível importar esse arquivo.');
+        } finally {
+            setProcessando(false);
+            setArquivoImportadoUri(null);
+            setTituloImportado('');
+        }
+    };
 
     // Abre o seletor de pastas do Android e guarda a escolha, pra usar nos
     // próximos backups sem perguntar de novo (até uma reinstalação do app).
@@ -360,6 +420,13 @@ export default function MusicScreen() {
                             >
                                 <MaterialIcons name="file-download" size={24} color={colors.text} />
                             </TouchableOpacity>
+                            <TouchableOpacity
+                                onPress={escolherArquivoImportar}
+                                style={styles.headerIconBtn}
+                                activeOpacity={0.7}
+                            >
+                                <MaterialIcons name="note-add" size={24} color={colors.text} />
+                            </TouchableOpacity>
                         </>
                     )}
                 </View>
@@ -475,6 +542,46 @@ export default function MusicScreen() {
                                 onPress={confirmarBackup}
                             >
                                 <Text style={styles.saveButtonText}>Salvar backup</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
+
+            <Modal
+                visible={modalImportarVisible}
+                animationType="fade"
+                transparent
+                onRequestClose={() => setModalImportarVisible(false)}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                        <View style={styles.modalHeader}>
+                            <MaterialIcons name="note-add" size={22} color={colors.primary} />
+                            <Text style={styles.modalTitle}>Importar Música</Text>
+                        </View>
+                        <TextInput
+                            style={styles.nomeInput}
+                            placeholder="Título da música"
+                            placeholderTextColor={colors.placeholder}
+                            value={tituloImportado}
+                            onChangeText={setTituloImportado}
+                            autoFocus
+                        />
+                        <View style={styles.modalButtons}>
+                            <TouchableOpacity
+                                style={styles.cancelButton}
+                                activeOpacity={0.8}
+                                onPress={() => setModalImportarVisible(false)}
+                            >
+                                <Text style={styles.buttonText}>Cancelar</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.saveButton}
+                                activeOpacity={0.8}
+                                onPress={confirmarImportacao}
+                            >
+                                <Text style={styles.saveButtonText}>Salvar</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
