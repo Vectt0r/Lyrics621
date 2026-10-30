@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
     View,
     Text,
+    TextInput,
     TouchableOpacity,
     Modal,
     ScrollView,
@@ -18,6 +19,7 @@ export default function SetListMusicas({ route, navigation }) {
     const [modalVisible, setModalVisible] = useState(false);
     const [musicas, setMusicas] = useState(setList.musicas || []);
     const [musicasSalvas, setMusicasSalvas] = useState([]);
+    const [buscaMusica, setBuscaMusica] = useState('');
     const [selecionadas, setSelecionadas] = useState([]);
     const [todosSetLists, setTodosSetLists] = useState([]);
     const [indiceSelecionado, setIndiceSelecionado] = useState(null);
@@ -49,6 +51,7 @@ export default function SetListMusicas({ route, navigation }) {
             const nomesSemExt = arquivosTxt.map(nome => nome.replace('.txt', ''));
             setMusicasSalvas(nomesSemExt);
             setSelecionadas([]);
+            setBuscaMusica('');
         } catch (e) {
             console.error('Erro ao listar arquivos:', e);
         }
@@ -159,6 +162,10 @@ export default function SetListMusicas({ route, navigation }) {
         }
     };
 
+    const musicasSalvasFiltradas = musicasSalvas.filter(nome =>
+        nome.toLowerCase().includes(buscaMusica.trim().toLowerCase())
+    );
+
     return (
         <View style={styles.container}>
             <Text style={styles.titulo}>SetList - {setList.name}</Text>
@@ -207,13 +214,22 @@ export default function SetListMusicas({ route, navigation }) {
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalContent}>
                         <Text style={styles.modalTitle}>Selecione as Músicas</Text>
-                        <ScrollView style={{ maxHeight: 300 }}>
-                            {musicasSalvas.length === 0 ? (
+                        <TextInput
+                            style={styles.buscaInput}
+                            placeholder="Buscar música"
+                            placeholderTextColor="#aaa"
+                            value={buscaMusica}
+                            onChangeText={setBuscaMusica}
+                        />
+                        <ScrollView style={{ maxHeight: 300 }} keyboardShouldPersistTaps="handled">
+                            {musicasSalvasFiltradas.length === 0 ? (
                                 <Text style={{ color: '#fff', textAlign: 'center', marginTop: 20 }}>
-                                    Nenhuma música salva encontrada.
+                                    {musicasSalvas.length === 0
+                                        ? 'Nenhuma música salva encontrada.'
+                                        : 'Nenhuma música encontrada para essa busca.'}
                                 </Text>
                             ) : (
-                                musicasSalvas.map((nome, i) => {
+                                musicasSalvasFiltradas.map((nome, i) => {
                                     const isChecked = selecionadas.includes(nome);
                                     return (
                                         <TouchableOpacity
@@ -299,6 +315,14 @@ const styles = StyleSheet.create({
         width: '90%',
     },
     modalTitle: { color: '#fff', fontSize: 18, fontWeight: 'bold', marginBottom: 15, textAlign: 'center' },
+    buscaInput: {
+        backgroundColor: '#333',
+        color: '#fff',
+        borderRadius: 6,
+        paddingHorizontal: 10,
+        paddingVertical: 8,
+        marginBottom: 12,
+    },
     checkboxContainer: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8 },
     checkbox: {
         width: 20,
